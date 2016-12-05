@@ -3,6 +3,7 @@
 Created on Tue Nov 15 13:26:03 2016
 
 @author: yu63158
+@target_rul: http://mops.twse.com.tw/mops/web/t163sb04
 """
 import requests
 from bs4 import BeautifulSoup
@@ -85,7 +86,7 @@ def proc_db(df):
         cursor.close()
         
         
-def get_web_data():
+def MOPS_YQ_1():
     headers = {'User-Agent':'User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'}
     session = requests.session()
 
@@ -156,7 +157,7 @@ def get_web_data():
 dt=datetime.datetime.now()
 
 print("##############################################")
-print("##      公開觀測資訊站~綜合損益表資料讀取       ##")
+print("##      公開觀測資訊站~綜合損益表資料讀取     ##")
 print("##                                          ##")
 print("##                                          ##")
 print("##   datetime: " + str(dt) +            "   ##")
@@ -172,15 +173,11 @@ tStart = time.time()#計時開始
 file.write("\n\n\n*** LOG datetime  " + str(datetime.datetime.now()) + " ***\n")
 
 
-
-
 # 建立資料庫連線
 conn = sqlite3.connect('market_price.sqlite')
     
-# 
-get_web_data()
-
-
+# 讀取網頁資料
+MOPS_YQ_1()
 
 tEnd = time.time()#計時結束
 file.write ("\n\n\n結轉耗時 %f sec\n" % (tEnd - tStart)) #會自動做進位
