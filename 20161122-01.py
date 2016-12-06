@@ -2,7 +2,7 @@
 """
 Created on Tue Nov 15 13:26:03 2016
 
-@author: yu63158
+@author: Bryson Xue
 @target_rul: http://mops.twse.com.tw/mops/web/t163sb04
 """
 import requests
@@ -13,7 +13,6 @@ import pandas as pd
 import re 
 import datetime
 from dateutil import parser
-from dateutil.parser import parse
 import sqlite3
 from random import randint
 
@@ -50,7 +49,7 @@ def mode_c():
 		qq = "01"
 	elif mmdd == "0905":
 		qq = "02"
-	elif mmdd == "1205":
+	elif mmdd == "1206":
 		qq = "03"
 	else:
 		file.write("mode_c 未到批次結轉時間，執行結束...\n")
@@ -59,6 +58,7 @@ def mode_c():
 	file.write("mode_c 自動抓取當季 yyyqq=" + yyy + qq + "\n")
 	print("mode_c 自動抓取當季 yyyqq=" + yyy + qq)
 
+     # 開始抓取資料
 	MOPS_YQ_1(yyy, qq)
 
 
@@ -75,7 +75,8 @@ def mode_h():
 	file.write("mode_h 手動結轉 yyyqq=" + yyy + qq + "\n")
 	print("mode_h 手動結轉 yyyqq=" + yyy + qq)
 
-	#MOPS_YQ_1(yyy, qq)
+      # 開始抓取資料
+	MOPS_YQ_1(yyy, qq)
 
 
 
@@ -97,7 +98,9 @@ def mode_a():
 
 			file.write("mode_a 特定區間，結轉yyyqq=" + yyy + qq + "\n")
 			print("mode_a 特定區間，結轉yyyqq=" + yyy + qq)
-			#MOPS_YQ_1(yyy, qq)
+   
+                 # 開始抓取資料
+			MOPS_YQ_1(yyy, qq)
 
 			q += 1
 
@@ -175,16 +178,17 @@ def MOPS_YQ_1(yyy, qq):
     headers = {'User-Agent':'User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'}
     session = requests.session()
     
+    # 隨機等待3~9秒的時間
     random_sec = randint(3,9)
 
     # 讀取查詢頁面
     r = session.get("http://mops.twse.com.tw/mops/web/t163sb04", headers=headers)
 
     print("Going to wait!!")
-    #time.sleep(5)
     print("Waiting sec=" + str(random_sec))
     time.sleep(random_sec)
-
+    #time.sleep(5)
+    
     # 拋送查詢條件到頁面，並取回查詢結果內容
     URL = 'http://mops.twse.com.tw/mops/web/ajax_t163sb04'
     """
@@ -211,10 +215,11 @@ def MOPS_YQ_1(yyy, qq):
     r = requests.post(URL, data=payload, headers=headers)
     r.encoding = "utf-8"
     sp = BeautifulSoup(r.text, 'html.parser')
-    #print(sp)
-    
-    #sys.exit("test end!!!")
+    print(sp)
 
+    #print(table[1])
+    sys.exit("test end ...")    
+    
     try:
         table = sp.findAll('table', attrs={'class':'hasBorder'})  # tag-attrs
         #print(table)
@@ -226,13 +231,12 @@ def MOPS_YQ_1(yyy, qq):
         sys.exit("@@@ 網頁讀取異常或該網頁無資料. @@@")
         
     yyyy = str(int(yyy) + 1911)
-    tb_cnt = len(table)
+    tb_cnt = len(table) # 網頁上的表格總數
     i = 0
     #while i <= 1:
     while i < tb_cnt:
         # 讀取表格抬頭
-        file.write("@@@@@ tb_cnt=" + str(i) + "...\n")
-        print("@@@@@ tb_cnt=" + str(i) + "...\n")
+        #print("tb_cnt=" + str(i) + "...\n")
         head = [[th.text for th in row.select('th')]
                 for row in table[i].select('tr')]
         #print(head)
@@ -249,31 +253,15 @@ def MOPS_YQ_1(yyy, qq):
         df2 = df.loc[:,['公司代號', '公司名稱', '基本每股盈餘（元）']]
         #print("this is df2 ==>")
         #print(df2)
-    
+
+        # 資料庫存取
         proc_db(df2, yyyy, qq)
         i += 1    
 
-
         
-        
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
+########################################################
+#  program Main                                        #
+########################################################
 # 寫入LOG File
 dt=datetime.datetime.now()
 
@@ -295,7 +283,6 @@ file.write("\n\n\n*** LOG datetime  " + str(datetime.datetime.now()) + " ***\n")
 
 # 建立資料庫連線
 conn = sqlite3.connect('market_price.sqlite')
-
 
 try:
 	run_mode = sys.argv[1]
