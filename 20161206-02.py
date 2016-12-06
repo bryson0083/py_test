@@ -28,15 +28,30 @@ payload = {
 "off": "1",
 "TYPEK": "sii",
 "year": '105',
-"season": '03'
+"season": '01'
 }
 r = requests.post(URL, data=payload, headers=headers)
 r.encoding = "utf-8"
+#r.encoding = "big5"
 
 #file.write(r.text)
 
-#print(r.text)
+ss = r.text
+#ss.replace("</table><br>","")
 
-sp = BeautifulSoup(r.text, 'html.parser')
-print(sp)
+#print(ss)
+
+sp = BeautifulSoup(ss, 'html.parser')
+#print(sp)
+
+table = sp.findAll('tr', attrs={'class':'odd'})  # tag-attrs
+
+print(table[1])
+                   
+                   
+#data = [[td.text for td in row.select('td')]
+#         for row in table[0].select('tr')]
+#print(data)
+
+
 file.close()
