@@ -54,7 +54,10 @@ tr_cnt = len(tr_odd)
 print("tr_cnt=" + str(tr_cnt) + "\n\n")
 #print(tr[1])
 
-#sys.exit("test end...\n")
+
+
+print(str(tr_odd[0]))
+sys.exit("test end...\n")
 
 i=0
 ls=[]
@@ -62,22 +65,30 @@ while i < tr_cnt:
 #while i <= 0:
     if i == 0:
         head = [th.text for th in tr_hd[1].select('th')]
-    
+    elif i == 1:
+        head = [th.text for th in tr_hd[3].select('th')]
+    elif i == 2:
+        head = [th.text for th in tr_hd[5].select('th')]
     #print(head)
     
-    data = [td.text for td in tr_odd[i].select('td')]
-    ls.append(data)
+    data = [[td.text for td in tr_odd[i].select('td')]]
+    #ls.append(data)
             
     #print(data)
-    #df = pd.DataFrame(data)
+    df = pd.DataFrame(data, columns = head)
     #print(df)
-    #df2 = df.loc[:,['公司代號', '公司名稱', '每股參考淨值']]
-    #print(df2)
+    df2 = df.loc[:,['公司代號', '公司名稱', '每股參考淨值']]
+    print(df2)
     
     i += 1
 
-df = pd.DataFrame(ls,head)
-print(df)    
+    
+    
+#print(head)
+
+#print(ls)
+#df = pd.DataFrame(ls,head)
+#print(df)    
 
 
     
