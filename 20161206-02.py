@@ -7,6 +7,8 @@ Created on Tue Dec  6 15:54:42 2016
 import requests
 from bs4 import BeautifulSoup
 import time
+import pandas as pd
+import sys
 
 name = "aaaa.txt"
 file = open(name, 'a', encoding = 'UTF-8')
@@ -44,10 +46,41 @@ ss = r.text
 sp = BeautifulSoup(ss, 'html.parser')
 #print(sp)
 
-table = sp.findAll('tr', attrs={'class':'odd'})  # tag-attrs
+tr_hd = sp.findAll('tr', attrs={'class':'tblHead'})
+tr_odd = sp.findAll('tr', attrs={'class':'odd'})  # tag-attrs
+tr_even = sp.findAll('tr', attrs={'class':'even'}) 
 
-print(table[1])
-                   
+tr_cnt = len(tr_odd)
+print("tr_cnt=" + str(tr_cnt) + "\n\n")
+#print(tr[1])
+
+#sys.exit("test end...\n")
+
+i=0
+ls=[]
+while i < tr_cnt:
+#while i <= 0:
+    if i == 0:
+        head = [th.text for th in tr_hd[1].select('th')]
+    
+    #print(head)
+    
+    data = [td.text for td in tr_odd[i].select('td')]
+    ls.append(data)
+            
+    #print(data)
+    #df = pd.DataFrame(data)
+    #print(df)
+    #df2 = df.loc[:,['公司代號', '公司名稱', '每股參考淨值']]
+    #print(df2)
+    
+    i += 1
+
+df = pd.DataFrame(ls,head)
+print(df)    
+
+
+    
                    
 #data = [[td.text for td in row.select('td')]
 #         for row in table[0].select('tr')]
