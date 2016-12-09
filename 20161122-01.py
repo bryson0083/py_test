@@ -49,7 +49,7 @@ def mode_c():
 		qq = "01"
 	elif mmdd == "0905":
 		qq = "02"
-	elif mmdd == "1206":
+	elif mmdd == "1209":
 		qq = "03"
 	else:
 		file.write("mode_c 未到批次結轉時間，執行結束...\n")
@@ -215,10 +215,9 @@ def MOPS_YQ_1(yyy, qq):
     r = requests.post(URL, data=payload, headers=headers)
     r.encoding = "utf-8"
     sp = BeautifulSoup(r.text, 'html.parser')
-    print(sp)
-
+    #print(sp)
     #print(table[1])
-    sys.exit("test end ...")    
+    #sys.exit("test end ...")    
     
     try:
         table = sp.findAll('table', attrs={'class':'hasBorder'})  # tag-attrs
