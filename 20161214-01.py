@@ -40,14 +40,27 @@ def DailyQuoCSV(sear_date):
 	
 	f.close()
 
-str_date = "20160101"
-start_date = parser.parse(str_date).strftime("%Y%m%d")
-date_1 = datetime.datetime.strptime(start_date, "%Y%m%d")
 
-end_date = date_1 + datetime.timedelta(days=10)
-str_end_date = parser.parse(end_date).strftime("%Y%m%d")
+date_fmt = "%Y/%m/%d"
+start_date = "20160101"
+start_date = parser.parse(start_date).strftime(date_fmt)
+date_1 = datetime.datetime.strptime(start_date, date_fmt)
 
-print(str(date_1) + "~" + str(str_end_date))
+end_date = date_1 + datetime.timedelta(days=1)
+end_date = str(end_date)[0:10]
+end_date = parser.parse(end_date).strftime(date_fmt)
+
+print("str_end_date=" + end_date)
+
+print(str(start_date) + "~" + str(end_date))
+
+
+
+
+a = datetime.datetime.strptime("2016/01/01", date_fmt)
+b = datetime.datetime.strptime("2016/01/10", date_fmt)
+delta = b - a
+print(delta.days)
 
 
 print("End of prog...")
