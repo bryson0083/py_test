@@ -7,12 +7,14 @@ Created on Wed Dec 21 20:46:36 2016
 
 
 import subprocess, sys, shlex
+import time
 
+"""
 cmd = "C:\Program Files (x86)\PCMan\PCMan.exe"
 process = subprocess.run([cmd,'ptt.cc\n','bryson0083\n'], stdout=subprocess.PIPE, shell=True)
 proc_stdout = process.communicate()[0].strip()
 print(proc_stdout)
-
+"""
 
 """
 import subprocess  
@@ -27,13 +29,22 @@ p.stdin.flush()
 #print(p.stdout.read())  
 """
 
-"""
-calcProc = subprocess.Popen(['c:\\Windows\\System32\\calc.exe'], shell=True, stdin=subprocess.PIPE)
-calcProc.poll() == None
 
-calcProc.wait()
-calcProc.poll()
+p = subprocess.Popen('cmd', stdin=subprocess.PIPE, universal_newlines=True)
+time.sleep(2)
+p.stdin.write('dir\n')
+#out, err = p.communicate()
+#print(err)
 
-print("shhhhhhhh")
-calcProc.communicate(b'1')
-"""
+
+#p.stdin.write(b'cps111036a\r')
+#time.sleep(1)
+#p.stdin.write(b'dir\r')
+#time.sleep(1)
+#p.communicate()[0]
+p.stdin.close()
+
+#grep_stdout = p.communicate(input=b'yucps00\ncps111036a\ndir\n')[0]
+#print(grep_stdout)
+
+#os.popen(cmd, 'w', bufsize)
