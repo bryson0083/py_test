@@ -1,53 +1,43 @@
-import os;
-#from subprocess import Popen, PIPE
-import subprocess
-import sys
-from subprocess import Popen, PIPE, STDOUT
-
-#os.system("\"C:\\PN300\\AXP76A.EMU\">yucps00 ");
-
-#subprocess.call([r'C:\PN300\bin\Pn3Tel.exe', 'C:\PN300\AXP76A.EMU'])
-
-
-
-
+############################
+#      連線PN300範例       #
+############################
 import telnetlib
+import time
 
 USER_ID = "yucps00"
 PASSWORD = "cps111036a"
-timeout = 30
+
 tn = telnetlib.Telnet('100.1.1.6') 
-print("111")
+
 tn.read_until(b"Username: ")
-print("222")
-tn.write(USER_ID.encode('ascii') + b"\n")
-print("333")
+tn.write(USER_ID.encode('ascii') + b"\r")
+
 tn.read_until(b"Password: ")
-print("444")
-tn.write(PASSWORD.encode('ascii') + b"\n")
-print("555")
+tn.write(PASSWORD.encode('ascii') + b"\r")
 
 while True:
-    line = tn.read_until(b"\n")  # Check for new line and CR
+    line = tn.read_until(b"\r")  # Check for new line and CR
     print(line)
     if (b"DONE ! PROCESS NAME") in line:   # If last read line is the prompt, end loop
         break
 
-
+# 等待直到命令提示符號出現
+p = tn.read_until(b"[MIS.CPS]")
+print(p)
+tn.write(b"ren aaa.txt bbb.txt\r")
 
 tn.read_until(b"[MIS.CPS]")
-print("666")
-tn.write(b"show time\n")
-print("777")
+tn.write(b"ren ccc.txt ddd.txt\r")
 
+tn.read_until(b"[MIS.CPS]")
+tn.write(b"ren fff.txt eee.txt\r")
 
-print("888")
-tn.write(b"vt100\n")
-print(tn.read_all().decode('ascii'))
-print("999")
+tn.read_until(b"[MIS.CPS]")
+tn.write(b"del ggg.txt;* /nocon\r")
+
+tn.read_until(b"[MIS.CPS]")
+tn.write(b"logout\r")
+time.sleep(1)
+
 tn.close()
-
-
-
-
-
+print("prog done..")
