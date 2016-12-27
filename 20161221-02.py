@@ -4,10 +4,10 @@
 import telnetlib
 import time
 
-USER_ID = "yucps00"
-PASSWORD = "cps111036a"
+USER_ID = "account"
+PASSWORD = "password"
 
-tn = telnetlib.Telnet('100.1.1.6') 
+tn = telnetlib.Telnet('127.0.0.1') 
 
 tn.read_until(b"Username: ")
 tn.write(USER_ID.encode('ascii') + b"\r")
