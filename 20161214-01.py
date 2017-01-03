@@ -11,6 +11,8 @@ import time
 from random import randint
 from dateutil import parser
 import datetime
+from dateutil.relativedelta import relativedelta
+import os.path
 
 def DailyQuoCSV(sear_date):
 	headers = {'User-Agent':'User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'}
@@ -26,41 +28,68 @@ def DailyQuoCSV(sear_date):
 	URL = 'http://www.tse.com.tw/ch/trading/exchange/MI_INDEX/MI_INDEX.php'
 	payload = {
 	           "download": "csv",
-	           "qdate": "105/12/12",
+	           "qdate": sear_date,
 	           "selectType": "ALLBUT0999"
 	           }
 	
 	r = requests.post(URL, data=payload, headers=headers)
 	r.encoding = "utf-8"
+	print(sear_date + str(r.status_code) + "\n")
 	
-	with open('ccc.csv', 'wb') as f:
-		for chunk in r.iter_content(chunk_size=1024): 
-			if chunk: # filter out keep-alive new chunks
-				f.write(chunk)
-	
-	f.close()
+	"""
+	data_yn = "Y"
+	if r.status_code==200:
+		print(sear_date + "沒有資料...")
+		data_yn = "N"
 
+	if data_yn == "Y":
+		file_name = "./tse_quo_data/" + sear_date.replace("/","") + ".csv"
+		is_existed = os.path.exists(file_name)
+		
+		if is_existed == False:
+			with open(file_name, 'wb') as f:
+				for chunk in r.iter_content(chunk_size=1024): 
+					if chunk: # filter out keep-alive new chunks
+						f.write(chunk)
+						f.close()	
+	"""
+
+# 起訖日期
+start_date = "2016/02/01"
+end_date = "2016/02/04"
 
 date_fmt = "%Y/%m/%d"
-start_date = "20160101"
-start_date = parser.parse(start_date).strftime(date_fmt)
-date_1 = datetime.datetime.strptime(start_date, date_fmt)
-
-end_date = date_1 + datetime.timedelta(days=1)
-end_date = str(end_date)[0:10]
-end_date = parser.parse(end_date).strftime(date_fmt)
-
-print("str_end_date=" + end_date)
-
-print(str(start_date) + "~" + str(end_date))
-
-
-
-
-a = datetime.datetime.strptime("2016/01/01", date_fmt)
-b = datetime.datetime.strptime("2016/01/10", date_fmt)
+a = datetime.datetime.strptime(start_date, date_fmt)
+b = datetime.datetime.strptime(end_date, date_fmt)
 delta = b - a
-print(delta.days)
+int_diff_date = delta.days
+print("days=" + str(int_diff_date) + "\n")
+
+i = 1
+dt = ""
+while i <= (int_diff_date+1):
+	print(str(i) + "\n")
+	if i==1:
+		str_date = start_date
+	else:
+		str_date = parser.parse(str(dt)).strftime("%Y/%m/%d")
+
+	#print(str_date + "\n")
+	
+	# 轉民國年日期
+	arg_date = str(int(str_date[0:4]) - 1911) + str_date[4:]
+	print(arg_date + "\n")
+	DailyQuoCSV(arg_date)
+	
+	dt = datetime.datetime.strptime(str_date, date_fmt).date()
+	dt = dt + relativedelta(days=1)
+	i += 1
+
+
+
+
+
+
 
 
 print("End of prog...")

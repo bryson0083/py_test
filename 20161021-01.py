@@ -84,3 +84,23 @@ dt = datetime.datetime.now() + relativedelta(days=6)
 print(dt)
 
 #print(parse(end_date).strftime("%m"))
+
+# Date diff
+date_fmt = "%Y/%m/%d"
+start_date = "20160229"
+start_date = parser.parse(start_date).strftime(date_fmt)
+date_1 = datetime.datetime.strptime(start_date, date_fmt)
+
+end_date = date_1 + datetime.timedelta(days=1)
+end_date = str(end_date)[0:10]
+end_date = parser.parse(end_date).strftime(date_fmt)
+
+print(str(start_date) + "~" + str(end_date))
+
+#a = datetime.datetime.strptime(start_date, date_fmt)
+#b = datetime.datetime.strptime(end_date, date_fmt)
+a = datetime.datetime.strptime("2016/01/01", date_fmt)
+b = datetime.datetime.strptime("2016/01/10", date_fmt)
+
+delta = b - a
+print(delta.days)
