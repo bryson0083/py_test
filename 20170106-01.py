@@ -7,7 +7,7 @@ Created on Fri Jan  6 09:16:46 2017
 
 import csv
 
-with open('test.csv', 'r') as f:
+with open('1050511.csv', 'r') as f:
   reader = csv.reader(f)
   your_list = list(reader)
 
