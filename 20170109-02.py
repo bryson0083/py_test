@@ -25,6 +25,7 @@ def TSE_QUO_READ_CSV(arg_date):
 	is_existed = os.path.exists(file_name)
 	if is_existed == False:
 		print(arg_date + "無報價CSV檔.\n")
+		file.write(arg_date + "無報價CSV檔.\n")
 		return
 	
 	#讀取每日報價CSV檔
@@ -157,10 +158,10 @@ def TSE_QUO_DB(arg_df, arg_date):
 			except sqlite3.Error as er:
 				commit_flag = "N"
 				print("insert into STOCK_QUO er=" + er.args[0] + "\n")
-				print(comp_id + " " + quo_date + "資料寫入異常...Rollback!\n")
+				print(comp_id + " " + comp_name + " " + quo_date + "資料寫入異常...Rollback!\n")
 				file.write("insert into STOCK_QUO er=" + er.args[0] + "\n")
 				file.write(strsql + "\n")
-				file.write(comp_id + " " + quo_date + "資料寫入異常...Rollback!\n")
+				file.write(comp_id + " " + comp_name + " " + quo_date + "資料寫入異常...Rollback!\n")
 				conn.execute("rollback")
 			
 		else:
@@ -186,10 +187,10 @@ def TSE_QUO_DB(arg_df, arg_date):
 			except sqlite3.Error as er:
 				commit_flag = "N"
 				print("update STOCK_QUO er=" + er.args[0] + "\n")
-				print(comp_id + " " + quo_date + "資料更新異常...Rollback!\n")
+				print(comp_id + " " + comp_name + " " + quo_date + "資料更新異常...Rollback!\n")
 				file.write("update STOCK_QUO er=" + er.args[0] + "\n")
 				file.write(strsql + "\n")
-				file.write(comp_id + " " + quo_date + "資料更新異常...Rollback!\n")
+				file.write(comp_id + " " + comp_name + " " + quo_date + "資料更新異常...Rollback!\n")
 				conn.execute("rollback")
 				
 		#關閉cursor
@@ -199,7 +200,7 @@ def TSE_QUO_DB(arg_df, arg_date):
 	if commit_flag == "Y":
 		conn.commit()
 		print(quo_date + "報價資料寫入成功.\n")
-		file.write(quo_date + "報價資料寫入成功.\n")
+		#file.write(quo_date + "報價資料寫入成功.\n")
 	
 	#關閉資料庫連線
 	conn.close
@@ -229,7 +230,7 @@ a = datetime.datetime.strptime(start_date, date_fmt)
 b = datetime.datetime.strptime(end_date, date_fmt)
 delta = b - a
 int_diff_date = delta.days + 1
-print("days=" + str(int_diff_date) + "\n")
+#print("days=" + str(int_diff_date) + "\n")
 
 i = 1
 dt = ""
