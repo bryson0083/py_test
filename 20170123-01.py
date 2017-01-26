@@ -14,5 +14,5 @@ new_users = [
 db_url = 'https://brysonxue-bfca6.firebaseio.com/'
 fdb = firebase.FirebaseApplication(db_url, None)
 for user in new_users:
-    fdb.post('/user', user)
+    fdb.post('/demo', user)
     time.sleep(3)
