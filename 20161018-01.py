@@ -14,7 +14,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
-driver = webdriver.Firefox()
+driver = webdriver.Chrome()
 driver.get("http://mops.twse.com.tw/mops/web/t163sb04")
 
 #網頁查詢條件輸入，並提交表單
