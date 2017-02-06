@@ -104,3 +104,10 @@ b = datetime.datetime.strptime("2016/01/10", date_fmt)
 
 delta = b - a
 print(delta.days)
+
+#weekday demo (monday=1 ~ sunday=7)
+dt_wday = datetime.datetime.today().isoweekday()
+print(dt_wday)
+
+dt_wday2 = datetime.datetime.strptime('20170206', '%Y%m%d').date().isoweekday()
+print(dt_wday2)

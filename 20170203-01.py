@@ -36,21 +36,21 @@ df = pd.DataFrame(data, columns = ['日期','收盤價'])
 #LIST轉換為Numpy Array
 close = np.array(close)
 
-#計算移動平均(ma10)
-ma10 = talib.MA(close, timeperiod=10, matype=0)
+#計算移動平均(ma20)
+ma20 = talib.MA(close, timeperiod=10, matype=0)
 
 #計算移動平均(ma60)
 ma60 = talib.MA(close, timeperiod=60, matype=0)
 
 #print(close)
-#print(ma10)
+#print(ma20)
 #print(ma60)
 
-#均線 10 ma 值導到dataframe
-df['ma10'] = ma10
+#均線 20 ma 值導到dataframe
+df['ma20'] = ma20
 
 #計算均線值與前一天的差(作為變動方向)
-df['ma10_diff_yesterday'] = df['ma10'] - df['ma10'].shift(1)
+df['ma20_diff_yesterday'] = df['ma20'] - df['ma20'].shift(1)
 
 #均線 60 ma 值導到dataframe
 df['ma60'] = ma60
@@ -59,7 +59,7 @@ df['ma60'] = ma60
 df['ma60_diff_yesterday'] = df['ma60'] - df['ma60'].shift(1)
 
 #計算均線間的距離(以百分比表示)
-df['dist_ma_pct'] = abs((df['ma60'] - df['ma10']) / df['ma10'] * 100)
+df['dist_ma_pct'] = abs((df['ma60'] - df['ma20']) / df['ma20'] * 100)
 
 # for test 運算結果寫入EXCEL檔
 file_name = 'ma.xlsx'
