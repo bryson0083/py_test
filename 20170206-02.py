@@ -7,32 +7,211 @@ import xlsxwriter
 import datetime
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
+import sys
+
+def READ_DAY_QUO(arg_sear_comp_id, arg_date_st, arg_date_ed):
+	#讀取周線開盤價
+	strsql  = "select OPEN from STOCK_QUO "
+	strsql += "where "
+	strsql += "SEAR_COMP_ID = '" + arg_sear_comp_id + "' and "
+	strsql += "QUO_DATE >= '" + arg_date_st + "' and "
+	strsql += "QUO_DATE <= '" + arg_date_ed + "' "
+	strsql += "order by QUO_DATE "
+	strsql += "limit 1 "
+
+	cursor = conn.execute(strsql)
+	result = cursor.fetchone()
+
+	if result[0] is not None:
+		week_open = result[0]
+	else:
+		week_open = 0
+
+	#關閉cursor
+	cursor.close()
+
+	#讀取周線收盤價，與當周最後收盤日期
+	strsql  = "select CLOSE, QUO_DATE from STOCK_QUO "
+	strsql += "where "
+	strsql += "SEAR_COMP_ID = '" + arg_sear_comp_id + "' and "
+	strsql += "QUO_DATE >= '" + arg_date_st + "' and "
+	strsql += "QUO_DATE <= '" + arg_date_ed + "' "
+	strsql += "order by QUO_DATE desc "
+	strsql += "limit 1 "
+
+	cursor = conn.execute(strsql)
+	result = cursor.fetchone()
+
+	if result[0] is not None:
+		week_close = result[0]
+		week_close_dt = result[1]
+	else:
+		week_close = 0
+		week_close_dt = ""
+
+	#關閉cursor
+	cursor.close()
+
+	#讀取周線最低價
+	strsql  = "select min(LOW) from STOCK_QUO "
+	strsql += "where "
+	strsql += "SEAR_COMP_ID = '" + arg_sear_comp_id + "' and "
+	strsql += "QUO_DATE >= '" + arg_date_st + "' and "
+	strsql += "QUO_DATE <= '" + arg_date_ed + "' "
+
+	cursor = conn.execute(strsql)
+	result = cursor.fetchone()
+
+	if result[0] is not None:
+		week_low = result[0]
+	else:
+		week_low = 0
+
+	#關閉cursor
+	cursor.close()
+
+	#讀取周線最高價
+	strsql  = "select max(HIGH) from STOCK_QUO "
+	strsql += "where "
+	strsql += "SEAR_COMP_ID = '" + arg_sear_comp_id + "' and "
+	strsql += "QUO_DATE >= '" + arg_date_st + "' and "
+	strsql += "QUO_DATE <= '" + arg_date_ed + "' "
+
+	cursor = conn.execute(strsql)
+	result = cursor.fetchone()
+
+	if result[0] is not None:
+		week_high = result[0]
+	else:
+		week_high = 0
+
+	#關閉cursor
+	cursor.close()
+
+	#讀取周線成交量
+	strsql  = "select sum(VOL) from STOCK_QUO "
+	strsql += "where "
+	strsql += "SEAR_COMP_ID = '" + arg_sear_comp_id + "' and "
+	strsql += "QUO_DATE >= '" + arg_date_st + "' and "
+	strsql += "QUO_DATE <= '" + arg_date_ed + "' "
+
+	cursor = conn.execute(strsql)
+	result = cursor.fetchone()
+
+	if result[0] is not None:
+		week_vol = result[0]
+	else:
+		week_vol = 0
+
+	#關閉cursor
+	cursor.close()
+
+	print("open=" + str(week_open) + ", close=" + str(week_close) + ",high=" + str(week_high) + ",low=" + str(week_low) + ",vol=" + str(week_vol) + ",lat_dt=" + week_close_dt)
+
+	# 最後維護日期時間
+	str_date = str(datetime.datetime.now())
+	date_last_maint = parser.parse(str_date).strftime("%Y%m%d")
+	time_last_maint = parser.parse(str_date).strftime("%H%M%S")
+	prog_last_maint = "WEEK_QUO"
+
+	#資料存檔
+	strsql  = "delete from STOCK_QUO_WEEKLY "
+	strsql += "where "
+	strsql += "SEAR_COMP_ID = '" + arg_sear_comp_id + "' and "
+	strsql += "QUO_DATE = '" + week_close_dt + "' "
+
+	conn.execute(strsql)
+
+	strsql  = "insert into STOCK_QUO_WEEKLY ("
+	strsql += "SEAR_COMP_ID,QUO_DATE,OPEN,HIGH,LOW,CLOSE,VOL,"
+	strsql += "DATE_LAST_MAINT,TIME_LAST_MAINT,PROG_LAST_MAINT"
+	strsql += ") values ("
+	strsql += "'" + arg_sear_comp_id + "', "
+	strsql += "'" + week_close_dt + "', "
+	strsql += str(week_open) + ", "
+	strsql += str(week_high) + ", "
+	strsql += str(week_low) + ", "
+	strsql += str(week_close) + ", "
+	strsql += str(week_vol) + ", "
+	strsql += "'" + date_last_maint + "', "
+	strsql += "'" + time_last_maint + "', "
+	strsql += "'" + prog_last_maint + "' "
+	strsql += ")"
+
+	conn.execute(strsql)
+	conn.commit()
+
+
+
+def READ_WEEK_QUO(arg_date_st, arg_date_ed):
+	strsql  = "select distinct SEAR_COMP_ID from STOCK_QUO "
+	strsql += "where "
+	strsql += "QUO_DATE between '" + arg_date_st + "' and '" + arg_date_ed + "' "
+	strsql += "order by SEAR_COMP_ID "
+	strsql += "limit 1 "
+
+	cursor = conn.execute(strsql)
+	result = cursor.fetchall()
+	re_len = len(result)
+
+	if re_len > 0:
+		i = 0
+		for row in result:
+			i += 1
+			print(row[0])
+			READ_DAY_QUO(row[0], arg_date_st, arg_date_ed)
+
+	#關閉cursor
+	cursor.close()
+
+
 
 
 ############################################################################
 # Main                                                                     #
 ############################################################################
+#建立資料庫連線
+conn = sqlite3.connect("market_price.sqlite")
+
 #取得當天日期
 dt = datetime.datetime.now()
 now_date = parser.parse(str(dt)).strftime("%Y/%m/%d")
-print(now_date)
-
-#dt_wday = datetime.datetime.today().isoweekday()
-#print(dt_wday)
+#now_date = "2017/02/08"
+#print(now_date)
 
 #設定結轉起始日期
-start_date = '2000/01/01'
+strsql = "select MAX(QUO_DATE) from STOCK_QUO_WEEKLY "
+
+cursor = conn.execute(strsql)
+result = cursor.fetchone()
+re_len = len(result)
+
+#print(result)
+
+if result[0] is not None:
+	#start_date = result[0]
+	start_date = datetime.datetime.strptime(result[0], "%Y%m%d").date()
+	start_date = start_date + relativedelta(days=-10)
+	start_date = str(start_date)[0:10]
+	start_date = parser.parse(start_date).strftime("%Y/%m/%d")
+else:
+	start_date = '2000/01/01'
+	#start_date = '2017/01/01'
+
+#關閉cursor
+cursor.close()
+
+#sys.exit("end of test...")
 
 #計算區間的天數，作為迴圈終止條件
-date_fmt = "%Y/%m/%d"
-a = datetime.datetime.strptime(start_date, date_fmt)
-b = datetime.datetime.strptime(now_date, date_fmt)
+a = datetime.datetime.strptime(start_date, "%Y/%m/%d")
+b = datetime.datetime.strptime(now_date, "%Y/%m/%d")
 delta = b - a
 int_diff_date = delta.days + 1
 #print("days=" + str(int_diff_date) + "\n")
 
 #for test
-int_diff_date = 33
+#int_diff_date = 33
 
 i = 1
 dt = ""
@@ -64,20 +243,15 @@ while i <= int_diff_date:
 	#若cal_yn為Y，結算一次周K
 	if cal_yn == "Y":
 		print("區間開始於" + duration_st + "~" + duration_ed + "\n")
+		READ_WEEK_QUO(duration_st, duration_ed)
 
 	#日期往後推一天
-	dt = datetime.datetime.strptime(str_date, date_fmt).date()
+	dt = datetime.datetime.strptime(str_date, "%Y/%m/%d").date()
 	dt = dt + relativedelta(days=1)
 	i += 1
 
-
-
-
-
-
-
-
-
+#關閉資料庫連線
+conn.close()
 
 """
 #取得當天往前推180天日期
@@ -85,36 +259,6 @@ dt = datetime.datetime.now() + relativedelta(days=-180)
 str_prev_date = str(dt)[0:10]
 str_prev_date = parser.parse(str_prev_date).strftime("%Y%m%d")
 #print(str_prev_date)
-
-#建立資料庫連線
-conn = sqlite3.connect("market_price.sqlite")
-
-strsql  = "select distinct SEAR_COMP_ID from STOCK_QUO "
-strsql += "where "
-strsql += "QUO_DATE between '" + str_prev_date + "' and '" + str_today + "' "
-strsql += "order by SEAR_COMP_ID "
-#strsql += "limit 1 "
-
-cursor = conn.execute(strsql)
-result = cursor.fetchall()
-re_len = len(result)
-
-if re_len > 0:
-	i = 0
-	for row in result:
-		i += 1
-		print(row[0])
-
-		if select_yn == "Y":
-			print("選出股票=" + row[0])
-
-print("共選出" + str(i) + "檔股票...\n")
-
-#關閉cursor
-cursor.close()
-
-#關閉資料庫連線
-conn.close()
 """
 
 print("End of prog...")
