@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan  9 09:11:25 2017
+Created on Mon Feb 21 09:11:25 2017
 
 @author: bryson0083
 """
@@ -81,11 +81,11 @@ def SQUOTE_READ_CSV(arg_date):
 		
 		idx += 1
 		i += 1
-	#print(all_data[1])
+	
 	#all_data list拋到pandas
 	df = pd.DataFrame(all_data[1:], columns = all_data[0])
 	df2 = df.loc[:,['代號', '名稱', '收盤', '開盤', '最高', '最低', '成交股數']]
-	print(df2)
+	#print(df2)
 	
 	#寫入、更新資料庫
 	SQUOTE_DB(df2, arg_date)
@@ -235,8 +235,6 @@ start_date = parser.parse(start_date).strftime("%Y/%m/%d")
 
 #for需要時手動設定日期區間用
 start_date = "2007/04/23"
-#end_date = "2007/04/23"
-#start_date = "2017/02/20"
 end_date = "2017/02/20"
 
 # 寫入LOG File
@@ -269,6 +267,7 @@ while i <= int_diff_date:
 		str_date = parser.parse(str(dt)).strftime("%Y/%m/%d")
 		
 	#print(str_date + "\n")
+	
 	#讀取日期當天報價CSV檔
 	SQUOTE_READ_CSV(str_date)
 	
