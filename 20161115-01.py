@@ -75,7 +75,7 @@ payload = {
 
 r = requests.post(URL, data=payload, headers=headers)
 print("Going to post!!")
-time.sleep(30)
+time.sleep(5)
 print("Proc Awake!!")
 
 r.encoding = "utf-8"

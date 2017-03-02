@@ -4,10 +4,13 @@
 import telnetlib
 import time
 
-USER_ID = "account"
-PASSWORD = "password"
+USER_ID = "yucps00"
+PASSWORD = "cps111036a"
 
-tn = telnetlib.Telnet('127.0.0.1') 
+tn = telnetlib.Telnet('100.1.1.6') 
+
+#for telnetlib debug
+tn.set_debuglevel(1)
 
 tn.read_until(b"Username: ")
 tn.write(USER_ID.encode('ascii') + b"\r")
@@ -24,6 +27,9 @@ while True:
 # 等待直到命令提示符號出現
 p = tn.read_until(b"[MIS.CPS]")
 print(p)
+tn.write(b"DIR\r")
+
+"""
 tn.write(b"ren aaa.txt bbb.txt\r")
 
 tn.read_until(b"[MIS.CPS]")
@@ -34,6 +40,7 @@ tn.write(b"ren fff.txt eee.txt\r")
 
 tn.read_until(b"[MIS.CPS]")
 tn.write(b"del ggg.txt;* /nocon\r")
+"""
 
 tn.read_until(b"[MIS.CPS]")
 tn.write(b"logout\r")

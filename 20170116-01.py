@@ -9,9 +9,6 @@ ftp.login('yucps00','cps111036a')
 #files = ftp.dir()
 #print (files)
 
-
-
-
 files = []
 
 try:
