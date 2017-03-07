@@ -1,0 +1,14 @@
+{
+    "AAA": {
+            "id": "aaa_id",
+            "pwd": "aaa_pwd"
+    },
+    "BBB": {
+            "id": "bbb_id",
+            "pwd": "bbb_pwd"
+    },
+    "CCC": {
+            "id": "ccc_id",
+            "pwd": "ccc_pwd"
+    }
+}
