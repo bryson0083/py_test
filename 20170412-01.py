@@ -20,34 +20,32 @@ sp = BeautifulSoup(data, 'html.parser')
 
 table = sp.findAll('table', attrs={'class':'hasBorder'})
 tb_cnt = len(table) # 網頁上的表格總數
+#print(tb_cnt)
 
-#print(table[0])
 i=0
-#while i < tb_cnt:
-while i < 2:
+all_df = pd.DataFrame()
+while i <= tb_cnt-1:
 	ign = str(table[i]).find("面額新台幣10元之公司")
 
 	if ign == -1:
+		head = ['公司代號名稱','資料來源','期別','董事會決議通過股利分派日', \
+				'股東會日期','期初未分配盈餘/待彌補虧損(元)','本期淨利(淨損)(元)', \
+				'可分配盈餘(元)','分配後期末未分配盈餘(元)','盈餘分配之現金股利(元/股)', \
+				'法定盈餘公積、資本公積發放之現金(元/股)','股東配發之現金(股利)總金額(元)',\
+				'盈餘轉增資配股(元/股)','法定盈餘公積、資本公積轉增資配股(元/股)', \
+				'股東配股總股數(股)','摘錄公司章程-股利分派部分','備註','普通股每股面額']
+
 		# 讀取表格資料
 		rdata = [[td.text for td in row.select('td')]
 				for row in table[i].select('tr')]
 		rdata = [x for x in rdata if x != []]
-		#print(rdata)
-	
+		df = pd.DataFrame(data=rdata, columns = head)
+		all_df = pd.concat([all_df,df],ignore_index=True)
+
 	i += 1		
 
-head = ['公司代號名稱','資料來源','期別','董事會決議通過股利分派日', \
-		'股東會日期','期初未分配盈餘/待彌補虧損(元)','本期淨利(淨損)(元)', \
-		'可分配盈餘(元)','分配後期末未分配盈餘(元)','盈餘分配之現金股利(元/股)', \
-		'法定盈餘公積、資本公積發放之現金(元/股)','股東配發之現金(股利)總金額(元)',\
-		'盈餘轉增資配股(元/股)','法定盈餘公積、資本公積轉增資配股(元/股)', \
-		'股東配股總股數(股)','摘錄公司章程-股利分派部分','備註','普通股每股面額']
-
-df = pd.DataFrame(rdata, columns = head)
-#print(df)
-
-df = df.loc[:,['公司代號名稱', '資料來源', '股東會日期','盈餘分配之現金股利(元/股)','盈餘轉增資配股(元/股)']]
-#print(df)
+all_df = all_df.loc[:,['公司代號名稱', '資料來源', '股東會日期','盈餘分配之現金股利(元/股)','盈餘轉增資配股(元/股)']]
+#print(all_df)
 
 yyyy = "2015"
 
@@ -58,21 +56,21 @@ conn = sqlite3.connect("market_price.sqlite")
 global err_flag
 err_flag = False
 
-for i in range(0, len(df)):
-	data_source = str(df.loc[i]['資料來源'])
-	tmp_str = str(df.loc[i]['公司代號名稱'])
+for i in range(0, len(all_df)):
+	data_source = str(all_df.loc[i]['資料來源'])
+	tmp_str = str(all_df.loc[i]['公司代號名稱'])
 	tmp_ls = tmp_str.split(" - ")
 	comp_id = tmp_ls[0]
 	comp_name = tmp_ls[1]
-	shd_date = str(df.loc[i]['股東會日期'])
+	shd_date = str(all_df.loc[i]['股東會日期'])
 
 	if len(shd_date) > 2:
 		tmp_date = shd_date.split("/")
 		tmp_year = int(tmp_date[0]) + 1911
 		shd_date = str(tmp_year) + tmp_date[1] + tmp_date[2]
 
-	cash = df.loc[i]['盈餘分配之現金股利(元/股)']	#現金股利
-	sre = df.loc[i]['盈餘轉增資配股(元/股)']		#股票股利
+	cash = all_df.loc[i]['盈餘分配之現金股利(元/股)']	#現金股利
+	sre = all_df.loc[i]['盈餘轉增資配股(元/股)']		#股票股利
 
 	# 最後維護日期時間
 	str_date = str(datetime.datetime.now())
@@ -92,7 +90,6 @@ for i in range(0, len(df)):
 		cursor = conn.execute(sqlstr)
 		result = cursor.fetchone()
 
-		print(result[0])
 		if result[0] == 0:
 			sqlstr  = "insert into STOCK_DIVIDEND "
 			sqlstr += "(COMP_ID,COMP_NAME,SETM_YEAR,"
