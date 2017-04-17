@@ -83,11 +83,18 @@ def mode_h():
 
 # 跑特定區間，結轉資料(自行修改參數條件)
 def mode_a():
-	for y in range(2016,2017,1):
+	str_date = str(datetime.datetime.now())
+
+	# 轉換日期為C8格式字串
+	dt_c8 = parser.parse(str_date).strftime("%Y%m%d")
+	yyyy = int(dt_c8[0:4])
+	#print(yyyy)
+
+	for y in range(2005,yyyy,1):
 		#print("y=" + str(y))
 		yyy = str(y - 1911)
-		file.write("mode_a: 特定區間，結轉yyyqq=" + yyy + qq + "\n")
-		print("mode_a: 特定區間，結轉yyyqq=" + yyy + qq)
+		file.write("mode_a: 特定區間，結轉股東會民國" + yyy + "年度，上市櫃公司除權息資料\n")
+		print("mode_a: 特定區間，結轉股東會民國" + yyy + "年度，上市櫃公司除權息資料\n")
 
 		# 開始抓取資料(上市)
 		print("結轉上市公司除權息資料...")
@@ -107,7 +114,6 @@ def mode_a():
 		print("隨機等待秒數=" + str(random_sec) + "...")
 		time.sleep(random_sec)
 
-		q += 1
 
 def GET_STOCK_DIVIDEND(arg_yyy, arg_typek):
 	headers = {'User-Agent':'User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'}

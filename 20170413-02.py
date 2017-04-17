@@ -1,3 +1,19 @@
+"""
+公司股利分派公告資料彙總表(上市、上櫃)
+
+說明:
+抓取年度台股上市櫃公司，除權息日期、現金股利、股票股利資料。
+分三種模式抓取
+
+mode_c: 自動抓取當年度除權息資料，在固定日期區間，每天轉一次資料，其他時間不動作。
+mode_h: 手動輸入年度，抓取該年度上市櫃公司除權息資料。
+mode_a: 抓取年度區間內，所有台股上市櫃公司除權息資料，須注意本模式結轉資料量大。
+
+資料來源網址: http://mops.twse.com.tw/mops/web/t108sb27
+最早的資料從民國94年(2005年)起提供
+
+STOCK_DIVIDEND.py
+"""
 import time
 import pandas as pd
 import sqlite3
@@ -83,11 +99,18 @@ def mode_h():
 
 # 跑特定區間，結轉資料(自行修改參數條件)
 def mode_a(): #最早的資料年度為2005(民國94年起)
-	for y in range(2016,2017,1):
+	str_date = str(datetime.datetime.now())
+
+	# 轉換日期為C8格式字串
+	dt_c8 = parser.parse(str_date).strftime("%Y%m%d")
+	yyyy = int(dt_c8[0:4])
+	#print(yyyy)
+
+	for y in range(2005,yyyy,1):
 		#print("y=" + str(y))
 		yyy = str(y - 1911)
-		file.write("mode_a: 特定區間，結轉yyyqq=" + yyy + qq + "\n")
-		print("mode_a: 特定區間，結轉yyyqq=" + yyy + qq)
+		file.write("mode_a: 特定區間，結轉股東會民國" + yyy + "年度，上市櫃公司除權息資料\n")
+		print("mode_a: 特定區間，結轉股東會民國" + yyy + "年度，上市櫃公司除權息資料\n")
 
 		# 開始抓取資料(上市)
 		print("結轉上市公司除權息資料...")
@@ -107,7 +130,6 @@ def mode_a(): #最早的資料年度為2005(民國94年起)
 		print("隨機等待秒數=" + str(random_sec) + "...")
 		time.sleep(random_sec)
 
-		q += 1
 
 def GET_STOCK_DIVIDEND(arg_yyy, arg_typek):
 	headers = {'User-Agent':'User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'}
@@ -196,7 +218,7 @@ def proc_db(df):
 		yyyy = str(int(df.loc[i]['股利所屬年度']) + 1911)
 		cash = df.loc[i]['盈餘分配之股東現金股利(元/股)']	#現金股利
 		xd_date = df.loc[i]['除息交易日']
-		sre = df.loc[i]['盈餘轉增資配股(元/股)']		#股票股利
+		sre = df.loc[i]['盈餘轉增資配股(元/股)']			#股票股利
 		xr_date = df.loc[i]['除權交易日']
 
 		#民國年轉為西元年
