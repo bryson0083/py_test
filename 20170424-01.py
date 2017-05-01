@@ -113,7 +113,7 @@ def Cal_Adj_Price(arg_df):
 
 			#if str(quo_date) == "20160910":
 			#print("adj  " + quo_date + " " + str(adj_o) + " " + str(adj_h) + " " + str(adj_l) + " " + str(adj_c) + "\n")
-				
+
 			# 最後維護日期時間
 			str_date = str(datetime.datetime.now())
 			date_last_maint = parser.parse(str_date).strftime("%Y%m%d")
@@ -178,11 +178,11 @@ def Cal_Adj_Price(arg_df):
 				adj_o = aj_o_price - cash
 				adj_h = aj_h_price - cash
 				adj_l = aj_l_price - cash
-				adj_c = aj_c_price - cash				
+				adj_c = aj_c_price - cash
 
-		#for test 
+		#for test
 		break
-		
+
 	# 最後commit
 	if err_flag == False:
 		conn.commit()
@@ -223,20 +223,21 @@ tStart = time.time()#計時開始
 file.write("\n\n\n*** LOG datetime  " + str(datetime.datetime.now()) + " ***\n")
 
 #for y in range(2004,now_yyyy,1):
-for y in range(2015,2016,1):
+for y in range(2016,2017,1):
 	print("結轉還原股價，年度:" + str(y) + "\n")
 	file.write("結轉還原股價，盈餘結算年度:" + str(y) + "\n")
 
 	pre_yyyy = str(y - 1)
 	strsql  = "select a.COMP_ID, a.COMP_NAME, a.XD_DATE,"
-	strsql += "(select XD_DATE from stock_dividend where comp_id = a.comp_id and setm_year='" + pre_yyyy + "') as PRE_XD_DATE,"
+	strsql += "(select XD_DATE from stock_dividend where comp_id = a.comp_id and setm_year < '" + str(y) + "' order by setm_year desc limit 1) as PRE_XD_DATE,"
 	strsql += "a.CASH,a.XR_DATE,"
-	strsql += "(select XR_DATE from stock_dividend where comp_id = a.comp_id and setm_year='" + pre_yyyy + "') as PRE_XR_DATE,"
+	strsql += "(select XR_DATE from stock_dividend where comp_id = a.comp_id and setm_year < '" + str(y) + "' order by setm_year desc limit 1) as PRE_XR_DATE,"
 	strsql += "SRE "
 	strsql += "from stock_dividend a "
 	strsql += "where a.setm_year='" + str(y) + "' "
+	strsql += "and a.COMP_ID='1519' "
 	strsql += "order by a.COMP_ID "
-	strsql += "limit 1 "
+	strsql += "limit 100 "
 
 	#print(strsql)
 	cursor = conn.execute(strsql)
@@ -245,8 +246,9 @@ for y in range(2015,2016,1):
 	df = pd.DataFrame(result, columns=['COMP_ID','COMP_NAME','XD_DATE','PREV_XD_DATE','CASH','XR_DATE','PREV_XR_DATE','SRE'])
 	df = df.fillna('')
 
+	print(df)
 	#計算還原股價
-	Cal_Adj_Price(df)
+	#Cal_Adj_Price(df)
 
 	#關閉cursor
 	cursor.close()
