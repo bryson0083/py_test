@@ -64,7 +64,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 		df['ma3'] = ma3
 
 		"""
-		# for test 運算結果寫入EXCEL檔
+		# for test 股價原始資料寫入EXCEL檔
 		file_name = 'TOU_TEST.xlsx'
 		writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
 		df.to_excel(writer, sheet_name='stock', index=False)
@@ -80,48 +80,80 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 			cd3 = df.loc[i+2]['close']				#第三天收盤價
 			ma3_slice = df.loc[i-5:i]['ma3']		#往前取6天3MA值
 			chk_d_yn = trend_chk(ma3_slice, 'D')	#判斷是否downtrend
+			chk_u_yn = trend_chk(ma3_slice, 'U')	#判斷是否uptrend
 			ma3_slice2 = df.loc[i+2: i+4]['ma3']	#往前取2天3MA值
-			chk_u_yn = trend_chk(ma3_slice2, 'U')	#判斷是否Uptrend
+			bull_chk_u_yn = trend_chk(ma3_slice2, 'U')	#判斷是否底部空頭反轉
+			bear_chk_u_yn = trend_chk(ma3_slice2, 'D')	#判斷是否頭部多頭反轉
+
 			#print(cd1)
 			#print(ma3_slice2)
-			#print(chk_u_yn)
+			#print(bull_chk_u_yn)
 			#if i == 10:
 			#	sys.exit("test end.")
 
 			rec_data_yn = False
 			patt_type = ""
-
 			"""
+			#Bullish patterns after downtrends
 			#TWS判斷
 			if (cd1 > od1 and cd2 > od2 and cd3 > od3) and \
 			   (cd3 > cd2 > cd1) and (cd1 > od2 > od1) and \
-			   (cd2 > od3 > od2) and chk_d_yn == "Y":
+			   (cd2 > od3 > od2) and (chk_d_yn == "Y"):
 				rec_data_yn = True
 				patt_type = "TWS"
 
-			#TOU判斷
-			if (od1 > cd1 and cd2 > od1 > cd1 > od2 and cd3 > od3 and cd3 > cd2) and \
-				chk_d_yn == "Y":
-				#print(dt)
-				rec_data_yn = True
-				patt_type = "TOU"
-			"""
 			#TIU判斷
 			if (od1 > cd1) and (od1 >= od2 > cd1) and (od1 > cd2 >= cd1) and \
-			   (cd3 > od3) and (cd3 > od1) and chk_d_yn == "Y":
+			   (cd3 > od3) and (cd3 > od1) and (chk_d_yn == "Y"):
 				rec_data_yn = True
 				patt_type = "TIU"
 
+			#TOU判斷
+			if (od1 > cd1 and cd2 > od1 > cd1 > od2 and cd3 > od3 and cd3 > cd2) and \
+			   (chk_d_yn == "Y"):
+				#print(dt)
+				rec_data_yn = True
+				patt_type = "TOU"
+			
+			#MS判斷
+			if (od1 > cd1) and (abs(od2 - cd2) > 0) and (cd1 > cd2) and \
+			   (cd1 > od2) and (cd3 > od3) and (cd3 > (cd1 + (od1 - cd1)/2)) and \
+			   (chk_d_yn == "Y"):
+				rec_data_yn = True
+				patt_type = "MS"
+			"""
+			#Bearish patterns after uptrends
+			#TBC判斷
+			if (od1 > cd1 and od2 > cd2 and od3 > cd3) and \
+			   (cd1 > cd2 > cd3) and (od1 > od2 > cd1) and \
+			   (od2 > od3 > cd2) and (chk_u_yn == "Y"):
+				rec_data_yn = True
+				patt_type = "TBC"
 
+			#TID判斷
+			if (cd1 > od1) and (cd1 > od2 >= od1) and (cd1 >= cd2 > od1) and \
+			   (od3 > cd3) and (od1 > cd3) and (chk_u_yn == "Y"):
+				rec_data_yn = True
+				patt_type = "TID"
 
+			#TOD判斷
+			if (cd1 > od1 and od2 > cd1 > od1 > cd2 and od3 > cd3 and cd2 > cd3) and \
+			   (chk_u_yn == "Y"):
+				rec_data_yn = True
+				patt_type = "TOD"
 
-
+			#ES判斷
+			if (cd1 > od1) and (abs(od2 - cd2) > 0) and (cd2 > cd1) and \
+			   (od2 > cd1) and (od3 > cd3) and (cd3 < (od1 + (cd1 - od1)/2)) and \
+			   (chk_u_yn == "Y"):
+				rec_data_yn = True
+				patt_type = "ES"
 
 			if rec_data_yn == True:
-				ls_result.append([arg_stock[0],arg_stock[1], dt, patt_type, chk_u_yn])
+				ls_result.append([arg_stock[0],arg_stock[1], dt, patt_type, bull_chk_u_yn, bear_chk_u_yn])
 
 	#print(ls_result)
-	df_result = pd.DataFrame(ls_result, columns=['stock_id', 'stock_name', 'event_date', 'pattern_type','reversal'])
+	df_result = pd.DataFrame(ls_result, columns=['stock_id', 'stock_name', 'event_date', 'pattern_type','bottom_reverse','top_reverse'])
 	return df_result
 
 ############################################################################
@@ -129,13 +161,13 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 ############################################################################
 #回測日期區間
 str_prev_date = "20170101"
-str_today = "20170426"
+str_today = "20170428"
 
 # 寫入LOG File
 dt=datetime.datetime.now()
 str_date = parser.parse(str(dt)).strftime("%Y%m%d")
 
-name = "TOU_LOG_" + str_date + ".txt"
+name = "PATT_RECON_" + str_date + ".txt"
 file = open(name, 'a', encoding = 'UTF-8')
 tStart = time.time()#計時開始
 file.write("\n\n\n*** LOG datetime  " + str(datetime.datetime.now()) + " ***\n")
@@ -169,8 +201,7 @@ conn.close()
 
 #結果寫入CSV FILE
 #print(df_result)
-#df_result.to_csv('TOU_RESULT.csv', encoding='big5')
-df_result.to_csv('TOU_RESULT.csv', encoding='utf-8')
+df_result.to_csv('PATT_RECON_RESULT.csv', encoding='utf-8')
 
 tEnd = time.time()#計時結束
 file.write ("\n\n\n結轉耗時 %f sec\n" % (tEnd - tStart)) #會自動做進位
