@@ -1,8 +1,55 @@
 import sqlite3
 import datetime
+from datetime import date, timedelta
 from dateutil import parser
 import pandas as pd
 import time
+
+def f(d1, d2):
+	delta = d2 - d1
+	return set([d1 + timedelta(days=i) for i in range(delta.days + 1)])
+
+def Date_Overlap(range1, range2):
+	#判斷兩日期區間，做set_itsec
+	set_itsec = f(*range1[0:2]) & f(*range2[0:2])
+	xr = range1[2]
+	xd = range2[2]
+
+	ls_date = []
+	if set_itsec:
+		dt1 = min(set_itsec).strftime('%Y%m%d')
+		dt2 = max(set_itsec).strftime('%Y%m%d')
+		ls_date.append([dt1, dt2, xr, xd])
+
+		if min(set_itsec) != min(min(range1[0:2]),min(range2[0:2])):
+			dt1 = min(min(range1[0:2]),min(range2[0:2])).strftime('%Y%m%d')
+			dt2 = (min(set_itsec) + timedelta(days=-1)).strftime('%Y%m%d')
+			if min(range1[0:2]) < min(range2[0:2]):
+				ls_date.append([dt1, dt2, xr, 0])
+			else:
+				ls_date.append([dt1, dt2, 0, xd])
+
+
+		if max(set_itsec) != max(max(range1[0:2]),max(range2[0:2])):
+			dt1 = (max(set_itsec) + timedelta(days=1)).strftime('%Y%m%d')
+			dt2 = max(max(range1[0:2]),max(range2[0:2])).strftime('%Y%m%d')
+
+			if max(range1[0:2]) > max(range2[0:2]):
+				ls_date.append([dt1, dt2, xr, 0])
+			else:
+				ls_date.append([dt1, dt2, 0, xd])
+
+	else:
+		dt1 = min(range1).strftime('%Y%m%d')
+		dt2 = max(range1).strftime('%Y%m%d')
+		ls_date.append([dt1, dt2, xr, 0])
+
+		dt1 = min(range2).strftime('%Y%m%d')
+		dt2 = max(range2).strftime('%Y%m%d')
+		ls_date.append([dt1, dt2, xd, 0])
+
+	return tuple(ls_date)
+
 
 def Cal_Adj_Price(arg_df):
 	global err_flag
@@ -161,7 +208,7 @@ tStart = time.time()#計時開始
 file.write("\n\n\n*** LOG datetime  " + str(datetime.datetime.now()) + " ***\n")
 
 #for y in range(2004,now_yyyy,1):
-for y in range(2016,2017,1):
+for y in range(2015,2016,1):
 	print("結轉還原股價，年度:" + str(y) + "\n")
 	file.write("結轉還原股價，盈餘結算年度:" + str(y) + "\n")
 
@@ -185,12 +232,6 @@ for y in range(2016,2017,1):
 	df = df.fillna('')
 
 	print(df)
-
-
-
-
-
-
 	#計算還原股價
 	#Cal_Adj_Price(df)
 
