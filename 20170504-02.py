@@ -219,19 +219,35 @@ for y in range(2015,2016,1):
 	strsql += "(select XR_DATE from stock_dividend where comp_id = a.comp_id and setm_year < '" + str(y) + "' order by setm_year desc limit 1) as PRE_XR_DATE,"
 	strsql += "SRE "
 	strsql += "from stock_dividend a "
-	strsql += "where a.setm_year='" + str(y) + "' "
-#	strsql += "and a.COMP_ID='1519' "
+	strsql += "where a.setm_year='" + str(y) + "' and "
+	strsql += "(XD_DATE > '' or XR_DATE > '') "
+	#strsql += "and a.COMP_ID='1101' "
 	strsql += "order by a.COMP_ID "
-	strsql += "limit 1"
+	#strsql += "limit 10"
 
-	#print(strsql)
+	print(strsql)
 	cursor = conn.execute(strsql)
 	result = cursor.fetchall()
 
 	df = pd.DataFrame(result, columns=['COMP_ID','COMP_NAME','XD_DATE','PREV_XD_DATE','CASH','XR_DATE','PREV_XR_DATE','SRE'])
 	df = df.fillna('')
+	#print(df)
 
-	print(df)
+
+	"""
+	for i in range(0, len(df)):
+		print(df.loc[i]['COMP_ID'])
+		xd_date = df.loc[i]['XD_DATE']
+		prev_xd_date = df.loc[i]['PREV_XD_DATE']
+
+		xr_date = df.loc[i]['XR_DATE']
+		prev_xr_date = df.loc[i]['PREV_XR_DATE']
+	"""
+
+
+
+
+
 	#計算還原股價
 	#Cal_Adj_Price(df)
 

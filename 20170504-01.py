@@ -10,44 +10,45 @@ def Date_Overlap(range1, range2):
 	set_itsec = f(*range1[0:2]) & f(*range2[0:2])
 	xr = range1[2]
 	xd = range2[2]
+	sear_comp_id = range2[3]
 
 	ls_date = []
 	if set_itsec:
-		dt1 = min(set_itsec).strftime('%Y%m%d') 
-		dt2 = max(set_itsec).strftime('%Y%m%d') 
-		ls_date.append([dt1, dt2, xr, xd])
+		dt1 = min(set_itsec).strftime('%Y%m%d')
+		dt2 = max(set_itsec).strftime('%Y%m%d')
+		ls_date.append([dt1, dt2, xr, xd, sear_comp_id])
 
 		if min(set_itsec) != min(min(range1[0:2]),min(range2[0:2])):
-			dt1 = min(min(range1[0:2]),min(range2[0:2])).strftime('%Y%m%d') 
-			dt2 = (min(set_itsec) + timedelta(days=-1)).strftime('%Y%m%d') 
+			dt1 = min(min(range1[0:2]),min(range2[0:2])).strftime('%Y%m%d')
+			dt2 = (min(set_itsec) + timedelta(days=-1)).strftime('%Y%m%d')
 			if min(range1[0:2]) < min(range2[0:2]):
-				ls_date.append([dt1, dt2, xr, 0])
+				ls_date.append([dt1, dt2, xr, 0, sear_comp_id])
 			else:
-				ls_date.append([dt1, dt2, 0, xd])
+				ls_date.append([dt1, dt2, 0, xd, sear_comp_id])
 
 
 		if max(set_itsec) != max(max(range1[0:2]),max(range2[0:2])):
-			dt1 = (max(set_itsec) + timedelta(days=1)).strftime('%Y%m%d') 
-			dt2 = max(max(range1[0:2]),max(range2[0:2])).strftime('%Y%m%d') 
+			dt1 = (max(set_itsec) + timedelta(days=1)).strftime('%Y%m%d')
+			dt2 = max(max(range1[0:2]),max(range2[0:2])).strftime('%Y%m%d')
 
 			if max(range1[0:2]) > max(range2[0:2]):
-				ls_date.append([dt1, dt2, xr, 0])
+				ls_date.append([dt1, dt2, xr, 0, sear_comp_id])
 			else:
-				ls_date.append([dt1, dt2, 0, xd])
+				ls_date.append([dt1, dt2, 0, xd, sear_comp_id])
 
 	else:
 		dt1 = min(range1).strftime('%Y%m%d')
 		dt2 = max(range1).strftime('%Y%m%d')
-		ls_date.append([dt1, dt2, xr, 0])
+		ls_date.append([dt1, dt2, xr, 0, sear_comp_id])
 
 		dt1 = min(range2).strftime('%Y%m%d')
 		dt2 = max(range2).strftime('%Y%m%d')
-		ls_date.append([dt1, dt2, xd, 0])
+		ls_date.append([dt1, dt2, xd, 0, sear_comp_id])
 
 	return tuple(ls_date)
-	
 
 
+sear_comp_id = "1101.TW"
 xr_date_st = "20160701"
 xr_date_ed = "20160710"
 xr = 1.1
@@ -57,11 +58,11 @@ xd = 0.5
 
 dt1 = datetime.datetime.strptime(xr_date_st, '%Y%m%d').date()
 dt2 = datetime.datetime.strptime(xr_date_ed, '%Y%m%d').date()
-ls_xr_date = [dt1, dt2, xr]
+ls_xr_date = [dt1, dt2, xr, sear_comp_id]
 
 dt1 = datetime.datetime.strptime(xd_date_st, '%Y%m%d').date()
 dt2 = datetime.datetime.strptime(xd_date_ed, '%Y%m%d').date()
-ls_xd_date = [dt1, dt2, xd]
+ls_xd_date = [dt1, dt2, xd, sear_comp_id]
 
 #print(ls_xr_date)
 #print(ls_xd_date)

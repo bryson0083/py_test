@@ -128,8 +128,8 @@ def mode_a(): #最早的資料年度為2005(民國94年起)
 		print("結轉上櫃公司除權息資料...")
 		GET_STOCK_DIVIDEND(yyy, 'otc')
 
-		# 隨機等待60~120秒的時間
-		random_sec = randint(60,120)
+		# 隨機等待180~300秒的時間
+		random_sec = randint(180,300)
 		print("隨機等待秒數=" + str(random_sec) + "...")
 		time.sleep(random_sec)
 
