@@ -93,7 +93,6 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 
 			rec_data_yn = False
 			patt_type = ""
-			"""
 			#Bullish patterns after downtrends
 			#TWS判斷
 			if (cd1 > od1 and cd2 > od2 and cd3 > od3) and \
@@ -121,7 +120,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 			   (chk_d_yn == "Y"):
 				rec_data_yn = True
 				patt_type = "MS"
-			"""
+
 			#Bearish patterns after uptrends
 			#TBC判斷
 			if (od1 > cd1 and od2 > cd2 and od3 > cd3) and \
@@ -160,8 +159,8 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 # Main                                                                     #
 ############################################################################
 #回測日期區間
-str_prev_date = "20170101"
-str_today = "20170428"
+str_prev_date = "20070101"
+str_today = "20170505"
 
 # 寫入LOG File
 dt=datetime.datetime.now()
