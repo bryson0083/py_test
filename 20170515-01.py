@@ -61,10 +61,23 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 	if none_flag == False:
 		#LIST轉換為Numpy Array
 		npy_close = np.array(df['close'])
-		vol_tmp = df['vol'].tail(6)/1000
-		avg_vol = vol_tmp.mean()
+		stock_vol = df['vol'].tail(6)/1000	#取近六天成交量，並由股換算為張
+		last_vol = df['vol'].tail(1)/1000	#取最近一天成交量，並換算為張
+		last_open = df['open'].tail(1)
+		last_close = df['close'].tail(1)
+		avg_vol = stock_vol.mean()	#取平均
 
-		#print(vol_tmp.mean())
+		#print(last_vol.iloc[0])
+		#sys.exit("test end...")
+		rt = 0
+		if avg_vol > 0:
+			rt = (last_vol.iloc[0] - avg_vol) / avg_vol * 100
+
+		chg = 0
+		if last_open.iloc[0] > 0:
+			chg = (last_close.iloc[0] - last_open.iloc[0]) / last_open.iloc[0] * 100
+
+		#print(stock_vol.mean())
 		#sys.exit("test end...")
 
 		#計算6MA
@@ -79,47 +92,28 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 		ma50 = talib.MA(npy_close, timeperiod=50, matype=0)
 		df['ma50'] = ma50
 
+		last_50ma = df['ma50'].tail(1)
+
+		#三條MA線近六天的數值，全部丟到一個list下，一起計算變異數
 		ls_ma = []
-		ma6_tmp = df['ma6'].tail(6)
-		ma18_tmp = df['ma18'].tail(6)
-		ma50_tmp = df['ma50'].tail(6)
-		
 		ls_ma.extend(df['ma6'].tail(6))
 		ls_ma.extend(df['ma18'].tail(6))
 		ls_ma.extend(df['ma50'].tail(6))
-		#print(ls_ma)
 		var_val = statistics.variance(ls_ma)
 		#print(var_val)
 		"""
-		ls = [ma6_tmp.var(), ma18_tmp.var(), ma50_tmp.var()]
-		var_val = statistics.variance(ls)
-		print(var_val)
-
-		df_var = pd.DataFrame(ls)
-		var_val = df_var.var()
-		print(var_val)
-		
-		print(ma6_tmp)
-		print("\n\n")
-		print(ma18_tmp)
-		print("\n\n")
-		print(ma50_tmp)
-		print("\n\n")
-		print(ls)
-		print("\n\n")
-		print(ls_var.var())
 		sys.exit("test end...")
 
-		
+
 		# for test 股價原始資料寫入EXCEL檔
 		file_name = 'TOU_TEST.xlsx'
 		writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
 		df.to_excel(writer, sheet_name='stock', index=False)
 		writer.save()
 		"""
-		if avg_vol > 500:
-			ls_result = [[arg_stock[0],arg_stock[1],var_val]]
-			df_result = pd.DataFrame(ls_result, columns=['stock_id', 'stock_name', 'var'])
+		if avg_vol > 500 and rt > 0 and chg >= 3 and (last_close.iloc[0] > last_50ma.iloc[0]):
+			ls_result = [[arg_stock[0],arg_stock[1],var_val,rt]]
+			df_result = pd.DataFrame(ls_result, columns=['stock_id', 'stock_name', 'var', 'burst_rt'])
 
 
 	if len(ls_result) == 0:
