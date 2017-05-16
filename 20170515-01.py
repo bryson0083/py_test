@@ -5,32 +5,12 @@ import numpy as np
 import pandas as pd
 import xlsxwriter
 import datetime
+from datetime import date, timedelta
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 import sys
 import time
 import math, statistics
-
-#檢查list數值是否呈現遞減(mode='D')或遞增(mode='U')，回傳Y/N
-def trend_chk(df, mode):
-	i = 0
-	flag = "Y"
-	for elem in df:
-		if i == 0:
-			prev_elem = elem
-			i += 1
-			continue
-		else:
-			if (mode == "D") and (elem >= prev_elem):
-				flag = "N"
-				break
-			elif (mode == "U") and (elem <= prev_elem):
-				flag = "N"
-				break
-			else:
-				prev_elem = elem
-		i += 1
-	return flag
 
 #K線型態判斷
 def Patt_Recon(arg_stock, str_prev_date, str_today):
@@ -67,18 +47,15 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 		last_close = df['close'].tail(1)
 		avg_vol = stock_vol.mean()	#取平均
 
-		#print(last_vol.iloc[0])
-		#sys.exit("test end...")
+		#最近一天交易日，成交量漲幅
 		rt = 0
 		if avg_vol > 0:
 			rt = (last_vol.iloc[0] - avg_vol) / avg_vol * 100
 
+		#最近一天交易日，K棒本體漲幅
 		chg = 0
 		if last_open.iloc[0] > 0:
 			chg = (last_close.iloc[0] - last_open.iloc[0]) / last_open.iloc[0] * 100
-
-		#print(stock_vol.mean())
-		#sys.exit("test end...")
 
 		#計算6MA
 		ma6 = talib.MA(npy_close, timeperiod=6, matype=0)
@@ -92,6 +69,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 		ma50 = talib.MA(npy_close, timeperiod=50, matype=0)
 		df['ma50'] = ma50
 
+		#最近一天交易日50MA值
 		last_50ma = df['ma50'].tail(1)
 
 		#三條MA線近六天的數值，全部丟到一個list下，一起計算變異數
@@ -100,21 +78,12 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 		ls_ma.extend(df['ma18'].tail(6))
 		ls_ma.extend(df['ma50'].tail(6))
 		var_val = statistics.variance(ls_ma)
-		#print(var_val)
-		"""
-		sys.exit("test end...")
 
-
-		# for test 股價原始資料寫入EXCEL檔
-		file_name = 'TOU_TEST.xlsx'
-		writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
-		df.to_excel(writer, sheet_name='stock', index=False)
-		writer.save()
-		"""
-		if avg_vol > 500 and rt > 0 and chg >= 3 and (last_close.iloc[0] > last_50ma.iloc[0]):
+		#三條均線變異數介於0~1間、最近一天成交量相對平均量成長30%、紅K棒實體3%以上、
+		#最近一天收盤價在50MA之上、成交量均量需大於500張
+		if (var_val > 0 and var_val < 1) and rt >= 30 and chg >= 3 and (last_close.iloc[0] > last_50ma.iloc[0]) and avg_vol > 500:
 			ls_result = [[arg_stock[0],arg_stock[1],var_val,rt]]
 			df_result = pd.DataFrame(ls_result, columns=['stock_id', 'stock_name', 'var', 'burst_rt'])
-
 
 	if len(ls_result) == 0:
 		df_result = pd.DataFrame()
@@ -124,27 +93,28 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 ############################################################################
 # Main                                                                     #
 ############################################################################
-#回測日期區間
-str_prev_date = "20170101"
-str_today = "20170515"
+#產生日期區間(當天日期，往前推90天)
+today = datetime.datetime.now()
+prev_date = today + timedelta(days=-90)
+
+str_today = today.strftime("%Y%m%d")
+str_prev_date = prev_date.strftime("%Y%m%d")
 
 # 寫入LOG File
 dt=datetime.datetime.now()
 str_date = parser.parse(str(dt)).strftime("%Y%m%d")
 
-name = "PATT_RECON_" + str_date + ".txt"
+name = "STOCK_SELECT_TYPE04_" + str_date + ".txt"
 file = open(name, 'a', encoding = 'UTF-8')
 tStart = time.time()#計時開始
 file.write("\n\n\n*** LOG datetime  " + str(datetime.datetime.now()) + " ***\n")
-file.write("回測日期區間:" + str_prev_date + "~" + str_today + "\n")
+file.write("偵測日期區間:" + str_prev_date + "~" + str_today + "\n")
 
 #建立資料庫連線
 conn = sqlite3.connect("market_price.sqlite")
 
 strsql  = "select SEAR_COMP_ID,COMP_NAME, STOCK_TYPE from STOCK_COMP_LIST "
-#strsql += "where STOCK_TYPE = '上櫃' and SEAR_COMP_ID='3662.TW' "
 strsql += "order by STOCK_TYPE, SEAR_COMP_ID "
-#strsql += "limit 1 "
 
 cursor = conn.execute(strsql)
 result = cursor.fetchall()
@@ -164,9 +134,14 @@ cursor.close()
 #關閉資料庫連線
 conn.close()
 
-#結果寫入CSV FILE
-#print(df_result)
-df_result.to_csv('PATT_RECON_RESULTxxxx.csv', encoding='utf-8')
+#資料進行排序
+df_result = df_result.sort_values(by=['var', 'burst_rt'], ascending=[True, False])
+
+#結果寫入EXCEL檔
+file_name = 'STOCK_SELECT_TYPE04_' + str_date + '.xlsx'
+writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
+df_result.to_excel(writer, sheet_name='stock', index=False)
+writer.save()
 
 tEnd = time.time()#計時結束
 file.write ("\n\n\n結轉耗時 %f sec\n" % (tEnd - tStart)) #會自動做進位
