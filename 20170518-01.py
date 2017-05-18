@@ -31,6 +31,14 @@ def trend_chk(df, mode):
 		i += 1
 	return flag
 
+def cal_reward(buy_price, sell_price):
+	if buy_price > 0:
+		rt = (sell_price - buy_price) / buy_price * 100	#報酬率
+	else:
+		rt = 0
+
+	return rt
+
 #K線型態判斷
 def Patt_Recon(arg_stock, str_prev_date, str_today):
 	sear_comp_id = arg_stock[0]
@@ -70,31 +78,35 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 		df.to_excel(writer, sheet_name='stock', index=False)
 		writer.save()
 		"""
-		for i in range(2,len(df)-6):
+		for i in range(2,len(df)-60):
 			dt = df.loc[i]['date']					#報價日期
 			od1 = df.loc[i]['open']					#第一天開盤價
 			od2 = df.loc[i+1]['open']				#第二天開盤價
 			od3 = df.loc[i+2]['open']				#第三天開盤價
 
-			dt4 = df.loc[i+3]['date']				#第四天日期(底:進場日 / 頭:出場日)
-			od4 = df.loc[i+3]['open']				#第四天開盤價(底:進場價 / 頭:出場價)
-
 			cd1 = df.loc[i]['close']				#第一天收盤價
 			cd2 = df.loc[i+1]['close']				#第二天收盤價
 			cd3 = df.loc[i+2]['close']				#第三天收盤價
 
-			dt6 = df.loc[i+5]['date']				#第六天日期(底:出場日 / 頭:進場日)
-			cd6 = df.loc[i+5]['close']				#第六天收盤價(底:出場價 / 頭:進場價)
+			#型態完成後，隔天進場，並計算一周、兩周、
+			#一個月、兩個月後績效
+			dt4 = df.loc[i+3]['date']				#進場第01天日期(底:進場日 / 頭:出場日)
+			od4 = df.loc[i+3]['open']				#進場第01天開盤價(底:進場價 / 頭:出場價)
+			dt7 = df.loc[i+6]['date']				#進場第07天日期(底:出場日 / 頭:進場日)
+			cd7 = df.loc[i+6]['close']				#進場第07天收盤價(底:出場價 / 頭:進場價)
+			dt14 = df.loc[i+13]['date']				#進場第14天日期(底:出場日 / 頭:進場日)
+			cd14 = df.loc[i+13]['close']			#進場第14天收盤價(底:出場價 / 頭:進場價)
+			dt30 = df.loc[i+29]['date']				#進場第30天日期(底:出場日 / 頭:進場日)
+			cd30 = df.loc[i+29]['close']			#進場第30天收盤價(底:出場價 / 頭:進場價)
+			dt60 = df.loc[i+59]['date']				#進場第60天日期(底:出場日 / 頭:進場日)
+			cd60 = df.loc[i+59]['close']			#進場第60天收盤價(底:出場價 / 頭:進場價)
 
+			#型態出現前，必須是已跌一段時間或漲一段
+			#時間(以3MA取六天，判斷是否遞增/遞減)
 			ma3_slice = df.loc[i-5:i]['ma3']		#往前取6天3MA值
 			chk_d_yn = trend_chk(ma3_slice, 'D')	#判斷是否downtrend
 			chk_u_yn = trend_chk(ma3_slice, 'U')	#判斷是否uptrend
 
-			#ma3_slice2 = df.loc[i+2: i+4]['ma3']	#往前取2天3MA值
-			ma3_slice2 = df.loc[i+3: i+5]['ma3']	#往前取2天3MA值
-
-			bull_chk_u_yn = trend_chk(ma3_slice2, 'U')	#判斷是否底部空頭反轉
-			bear_chk_u_yn = trend_chk(ma3_slice2, 'D')	#判斷是否頭部多頭反轉
 
 			#print(dt + " " + str(od1) + " " + str(od2) + " " + str(od3) + " " + str(od4))
 			#print(ma3_slice2)
@@ -131,6 +143,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 				rec_data_yn = True
 				patt_type = "MS"
 
+			"""
 			#Bearish patterns after uptrends
 			#TBC判斷
 			if (od1 > cd1 and od2 > cd2 and od3 > cd3) and \
@@ -157,7 +170,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 			   (chk_u_yn == "Y"):
 				rec_data_yn = True
 				patt_type = "ES"
-
+			"""
 			buy_dt = ""
 			sell_dt = ""
 			buy_price = 0
