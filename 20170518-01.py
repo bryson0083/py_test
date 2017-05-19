@@ -31,9 +31,9 @@ def trend_chk(df, mode):
 		i += 1
 	return flag
 
-def cal_reward(buy_price, sell_price):
-	if buy_price > 0:
-		rt = (sell_price - buy_price) / buy_price * 100	#報酬率
+def cal_reward(in_price, out_price):
+	if in_price > 0:
+		rt = (out_price - in_price) / in_price * 100	#報酬率
 	else:
 		rt = 0
 
@@ -78,7 +78,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 		df.to_excel(writer, sheet_name='stock', index=False)
 		writer.save()
 		"""
-		for i in range(2,len(df)-60):
+		for i in range(2,len(df)-63):
 			dt = df.loc[i]['date']					#報價日期
 			od1 = df.loc[i]['open']					#第一天開盤價
 			od2 = df.loc[i+1]['open']				#第二天開盤價
@@ -92,14 +92,14 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 			#一個月、兩個月後績效
 			dt4 = df.loc[i+3]['date']				#進場第01天日期(底:進場日 / 頭:出場日)
 			od4 = df.loc[i+3]['open']				#進場第01天開盤價(底:進場價 / 頭:出場價)
-			dt7 = df.loc[i+6]['date']				#進場第07天日期(底:出場日 / 頭:進場日)
-			cd7 = df.loc[i+6]['close']				#進場第07天收盤價(底:出場價 / 頭:進場價)
-			dt14 = df.loc[i+13]['date']				#進場第14天日期(底:出場日 / 頭:進場日)
-			cd14 = df.loc[i+13]['close']			#進場第14天收盤價(底:出場價 / 頭:進場價)
-			dt30 = df.loc[i+29]['date']				#進場第30天日期(底:出場日 / 頭:進場日)
-			cd30 = df.loc[i+29]['close']			#進場第30天收盤價(底:出場價 / 頭:進場價)
-			dt60 = df.loc[i+59]['date']				#進場第60天日期(底:出場日 / 頭:進場日)
-			cd60 = df.loc[i+59]['close']			#進場第60天收盤價(底:出場價 / 頭:進場價)
+			dt7 = df.loc[i+10]['date']				#進場第07天日期(底:出場日 / 頭:進場日)
+			cd7 = df.loc[i+10]['close']				#進場第07天收盤價(底:出場價 / 頭:進場價)
+			dt14 = df.loc[i+17]['date']				#進場第14天日期(底:出場日 / 頭:進場日)
+			cd14 = df.loc[i+17]['close']			#進場第14天收盤價(底:出場價 / 頭:進場價)
+			dt30 = df.loc[i+33]['date']				#進場第30天日期(底:出場日 / 頭:進場日)
+			cd30 = df.loc[i+33]['close']			#進場第30天收盤價(底:出場價 / 頭:進場價)
+			dt60 = df.loc[i+63]['date']				#進場第60天日期(底:出場日 / 頭:進場日)
+			cd60 = df.loc[i+63]['close']			#進場第60天收盤價(底:出場價 / 頭:進場價)
 
 			#型態出現前，必須是已跌一段時間或漲一段
 			#時間(以3MA取六天，判斷是否遞增/遞減)
@@ -143,85 +143,66 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 				rec_data_yn = True
 				patt_type = "MS"
 
-			"""
-			#Bearish patterns after uptrends
-			#TBC判斷
-			if (od1 > cd1 and od2 > cd2 and od3 > cd3) and \
-			   (cd1 > cd2 > cd3) and (od1 > od2 > cd1) and \
-			   (od2 > od3 > cd2) and (chk_u_yn == "Y"):
-				rec_data_yn = True
-				patt_type = "TBC"
-
-			#TID判斷
-			if (cd1 > od1) and (cd1 > od2 >= od1) and (cd1 >= cd2 > od1) and \
-			   (od3 > cd3) and (od1 > cd3) and (chk_u_yn == "Y"):
-				rec_data_yn = True
-				patt_type = "TID"
-
-			#TOD判斷
-			if (cd1 > od1 and od2 > cd1 > od1 > cd2 and od3 > cd3 and cd2 > cd3) and \
-			   (chk_u_yn == "Y"):
-				rec_data_yn = True
-				patt_type = "TOD"
-
-			#ES判斷
-			if (cd1 > od1) and (abs(od2 - cd2) > 0) and (cd2 > cd1) and \
-			   (od2 > cd1) and (od3 > cd3) and (cd3 < (od1 + (cd1 - od1)/2)) and \
-			   (chk_u_yn == "Y"):
-				rec_data_yn = True
-				patt_type = "ES"
-			"""
-			buy_dt = ""
-			sell_dt = ""
-			buy_price = 0
-			sell_price = 0
-
 			#計算報酬率
-			if (patt_type == "TWS") or (patt_type == "TIU") or (patt_type == "TOU") or \
-			   (patt_type == "MS"):
-				#底部反轉
-				buy_dt = dt4
-				sell_dt = dt6
-				buy_price = od4
-				sell_price = cd6
-
-				if buy_price > 0:
-					rt = (sell_price - buy_price) / buy_price * 100	#報酬率
-				else:
-					rt = 0
-
-			elif (patt_type == "TBC") or (patt_type == "TID") or (patt_type == "TOD") or \
-				 (patt_type == "ES"):
-				#頭部反轉
-				buy_dt = dt6
-				sell_dt = dt4
-				buy_price = cd6
-				sell_price = od4
-
-				if sell_price > 0:
-					rt = (sell_price - buy_price) / sell_price * 100	#報酬率
-				else:
-					rt = 0
-
 			if rec_data_yn == True:
-				ls_result.append([arg_stock[0],arg_stock[1], dt, patt_type, bull_chk_u_yn, bear_chk_u_yn, buy_dt, buy_price, sell_dt, sell_price, rt])
+				#進場日期與進場價
+				in_dt = dt4
+				in_price = od4
+
+				#計算進場後一周績效
+				out_1w_dt = dt7
+				out_1w_price = cd7
+				rt_1w = cal_reward(in_price, out_1w_price)
+
+				rt_1w_yn = "N"
+				if rt_1w > 0.0:
+					rt_1w_yn = "Y"
+
+				#計算進場後兩周績效
+				out_2w_dt = dt14
+				out_2w_price = cd14
+				rt_2w = cal_reward(in_price, out_2w_price)
+
+				rt_2w_yn = "N"
+				if rt_2w > 0.0:
+					rt_2w_yn = "Y"
+
+				#計算進場後一個月績效
+				out_1m_dt = dt30
+				out_1m_price = cd30
+				rt_1m = cal_reward(in_price, out_1m_price)
+
+				rt_1m_yn = "N"
+				if rt_1m > 0.0:
+					rt_1m_yn = "Y"
+
+				#計算進場後二個月績效
+				out_2m_dt = dt60
+				out_2m_price = cd60
+				rt_2m = cal_reward(in_price, out_2m_price)
+
+				rt_2m_yn = "N"
+				if rt_2m > 0.0:
+					rt_2m_yn = "Y"
+
+				ls_result.append([arg_stock[0],arg_stock[1], dt, dt[0:4], patt_type, in_dt, in_price, out_1w_dt, out_1w_price, rt_1w, rt_1w_yn, out_2w_dt, out_2w_price, rt_2w, rt_2w_yn, out_1m_dt, out_1m_price, rt_1m, rt_1m_yn, out_2m_dt, out_2m_price, rt_2m, rt_2m_yn])
 
 	#print(ls_result)
-	df_result = pd.DataFrame(ls_result, columns=['stock_id', 'stock_name', 'event_date', 'pattern_type','bottom_reverse','top_reverse','buy_date','buy_price','sell_date','sell_price','return'])
+	df_result = pd.DataFrame(ls_result, columns=['stock_id', 'stock_name', 'event_date', 'yyyy', 'pattern_type','in_date','in_price','out_1w_dt','out_1w_price','return_1week','1week_yn','out_2w_dt','out_2w_price','return_2week','2week_yn','out_1m_dt','out_1m_price','return_1mon','1mon_yn','out_2m_dt','out_2m_price','return_2mon','2mon_yn'])
 	return df_result
 
 ############################################################################
 # Main                                                                     #
 ############################################################################
 #回測日期區間
-str_prev_date = "20170101"
-str_today = "20170516"
+str_prev_date = "20070101"
+str_today = "20170518"
 
 # 寫入LOG File
 dt=datetime.datetime.now()
 str_date = parser.parse(str(dt)).strftime("%Y%m%d")
 
-name = "PATT_RECON_" + str_date + ".txt"
+name = "BotRev_backtesting_" + str_date + ".txt"
 file = open(name, 'a', encoding = 'UTF-8')
 tStart = time.time()#計時開始
 file.write("\n\n\n*** LOG datetime  " + str(datetime.datetime.now()) + " ***\n")
@@ -231,7 +212,7 @@ file.write("回測日期區間:" + str_prev_date + "~" + str_today + "\n")
 conn = sqlite3.connect("market_price.sqlite")
 
 strsql  = "select SEAR_COMP_ID,COMP_NAME, STOCK_TYPE from STOCK_COMP_LIST "
-#strsql += "where SEAR_COMP_ID='1231.TW' "
+#strsql += "where SEAR_COMP_ID='6217.TW' "
 strsql += "order by STOCK_TYPE, SEAR_COMP_ID "
 #strsql += "limit 100 "
 
@@ -253,9 +234,11 @@ cursor.close()
 #關閉資料庫連線
 conn.close()
 
-#結果寫入CSV FILE
-#print(df_result)
-df_result.to_csv('PATT_RECON_RESULT_2007_2017.csv', encoding='utf-8')
+#結果寫入EXCEL檔
+file_name = 'BotRev_backtesting_' + str_date + '.xlsx'
+writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
+df_result.to_excel(writer, sheet_name='stock', index=False)
+writer.save()
 
 tEnd = time.time()#計時結束
 file.write ("\n\n\n結轉耗時 %f sec\n" % (tEnd - tStart)) #會自動做進位
