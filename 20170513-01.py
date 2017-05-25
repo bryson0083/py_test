@@ -202,7 +202,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 ############################################################################
 #回測日期區間
 str_prev_date = "20170101"
-str_today = "20170516"
+str_today = "20170522"
 
 # 寫入LOG File
 dt=datetime.datetime.now()

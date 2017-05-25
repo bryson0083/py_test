@@ -43,7 +43,7 @@ def cal_reward(in_price, out_price):
 def Patt_Recon(arg_stock, str_prev_date, str_today):
 	sear_comp_id = arg_stock[0]
 	#日線資料讀取
-	strsql  = "select quo_date, open, high, low, close from STOCK_QUO "
+	strsql  = "select quo_date, open, high, low, close, vol from STOCK_QUO "
 	strsql += "where "
 	strsql += "SEAR_COMP_ID='" + sear_comp_id + "' and "
 	strsql += "QUO_DATE between '" + str_prev_date + "' and '" + str_today + "' "
@@ -54,7 +54,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 
 	none_flag = False
 	if len(result) > 0:
-		df = pd.DataFrame(result, columns = ['date','open','high','low','close'])
+		df = pd.DataFrame(result, columns = ['date','open','high','low','close','vol'])
 		#print(df)
 	else:
 		none_flag = True
@@ -88,6 +88,9 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 			cd2 = df.loc[i+1]['close']				#第二天收盤價
 			cd3 = df.loc[i+2]['close']				#第三天收盤價
 
+			vo2 = df.loc[i+1]['vol']				#第二天成交量
+			vo3 = df.loc[i+2]['vol']				#第三天成交量
+
 			#型態完成後，隔天進場，並計算一周、兩周、
 			#一個月、兩個月後績效
 			dt4 = df.loc[i+3]['date']				#進場第01天日期(底:進場日 / 頭:出場日)
@@ -107,6 +110,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 			chk_d_yn = trend_chk(ma3_slice, 'D')	#判斷是否downtrend
 			chk_u_yn = trend_chk(ma3_slice, 'U')	#判斷是否uptrend
 
+			vol_3days_avg = df.loc[i:i+2]['vol'].mean()	#取3K棒3MV平均值
 
 			#print(dt + " " + str(od1) + " " + str(od2) + " " + str(od3) + " " + str(od4))
 			#print(ma3_slice2)
@@ -142,6 +146,23 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 			   (chk_d_yn == "Y"):
 				rec_data_yn = True
 				patt_type = "MS"
+
+			#型態完成當天(第三天)成交量，必須比前一天(第二天)多20%以上成交量
+			if rec_data_yn == True:
+				if vo2 > 0:
+					vol_up_rt = (vo3 - vo2) / vo2 * 100
+				else:
+					vol_up_rt = 0
+
+				if vol_up_rt >= 20:
+					rec_data_yn = True
+				else:
+					rec_data_yn = False
+
+			#排除均量小於500張的股票
+			if rec_data_yn == True:
+				if vol_3days_avg < 500000:
+					rec_data_yn = False
 
 			#計算報酬率
 			if rec_data_yn == True:
@@ -196,7 +217,7 @@ def Patt_Recon(arg_stock, str_prev_date, str_today):
 ############################################################################
 #回測日期區間
 str_prev_date = "20070101"
-str_today = "20170518"
+str_today = "20170522"
 
 # 寫入LOG File
 dt=datetime.datetime.now()
