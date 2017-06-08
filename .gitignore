@@ -189,6 +189,10 @@ $RECYCLE.BIN/
 #############
 
 *.py[cod]
+*.txt
+*.csv
+*.sqlite
+*.xlsx
 
 # Packages
 *.egg
