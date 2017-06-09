@@ -56,7 +56,7 @@ def GET_CSV(sear_date):
 				f.close()
 
 			#隨機等待一段時間
-			sleep_sec = randint(60,180)
+			sleep_sec = randint(30,120)
 			#sleep_sec = randint(5,10)
 			print("間隔等待 " + str(sleep_sec) + " secs.\n")
 			time.sleep(sleep_sec)

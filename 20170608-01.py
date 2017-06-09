@@ -19,6 +19,13 @@ import datetime
 from dateutil.relativedelta import relativedelta
 import os.path
 
+def DO_WAIT():
+	#隨機等待一段時間
+	sleep_sec = randint(30,120)
+	#sleep_sec = randint(5,10)
+	print("間隔等待 " + str(sleep_sec) + " secs.\n")
+	time.sleep(sleep_sec)
+
 def GET_CSV(sear_date):
 	global err_flag
 	rt_flag = False
@@ -47,7 +54,7 @@ def GET_CSV(sear_date):
 			if len_r == 221:	# 表示當天無收盤資料
 				# 若當天無資料，還是產生一個檔案
 				file2 = open(file_name, "a", encoding="big5")
-				file2.write("當天無三大法人個股買賣超資料")
+				file2.write("當天無交易資料")
 				file2.close()
 
 			else:
@@ -59,11 +66,7 @@ def GET_CSV(sear_date):
 				#close file
 				f.close()
 
-			#隨機等待一段時間
-			sleep_sec = randint(60,180)
-			#sleep_sec = randint(5,10)
-			print("間隔等待 " + str(sleep_sec) + " secs.\n")
-			time.sleep(sleep_sec)
+				DO_WAIT()	# 避免過度讀取網站，隨機間隔時間再讀取網頁
 
 		except Exception as e:
 			file.write("$$$ Err:" + sear_date + " 三大法人個股買賣超資料抓取異常，請檢查是否網路有問題或原網頁已更改. $$$")
@@ -91,7 +94,7 @@ end_date = parser.parse(str(dt)).strftime("%Y%m%d")
 
 #for需要時手動設定日期區間用(資料最早日期20120502起)
 start_date = "20170101"
-end_date = "20170604"
+end_date = "20170608"
 
 #LOG檔
 str_date = str(datetime.datetime.now())
