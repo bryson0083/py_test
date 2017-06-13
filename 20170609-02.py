@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan  9 09:11:25 2017
+櫃買中心三大法人個股買賣超日報~每日收盤CSV檔讀取並寫入資料庫
 
-@author: bryson0083
+@author: Bryson Xue
+@target_rul: 
+
+@Note: 
+	櫃買中心三大法人個股買賣超日報
+	讀取下載後的CSV檔，寫入資料庫
+	
 """
 import csv
 import pandas as pd
@@ -54,6 +60,9 @@ def READ_CSV(arg_date):
 				#print("start from " + str(i) + "\n")
 		i += 1
 
+	#取得CSV檔最後一筆資料的位置
+	last_row_idx = len(quo_list)
+
 	try:
 		# 讀取當天個股三大法人買賣超資料到list中
 		i = 0
@@ -63,30 +72,31 @@ def READ_CSV(arg_date):
 			#for item in quo_list[idx]:
 			#	print(item)
 
+			#讀取到CSV檔到沒有資料，跳出迴圈
+			if idx == last_row_idx:
+				#print("終止條件啟動")
+				break
+
 			data = [str(item) for item in quo_list[idx]]
 			data = list(filter(None, data))	#過濾empty string，寫法等同於[str(item) for item in quo_list[idx] if item]，但filter運算較快
-
-			# 判斷若list data長度不滿16，跳出迴圈
-			if len(data) == 0:
-				print("終止條件啟動")
-				break
 
 			all_data.append(data)
 			idx += 1
 
 	except Exception as e:
+		print("$$$ Err:" + arg_date + " 三大法人個股買賣超CSV資料讀取異常. $$$\n")
 		print(e)
-		print("$$$ Err:" + arg_date + " 三大法人個股買賣超CSV資料讀取異常. $$$")
-		file.write("$$$ Err:" + arg_date + " 三大法人個股買賣超CSV資料讀取異常. $$$")
+		file.write("$$$ Err:" + arg_date + " 三大法人個股買賣超CSV資料讀取異常. $$$\n")
+		file.write(e)
 		err_flag = True
 	
 	#all_data list拋到pandas
-	#df = pd.DataFrame(all_data[1:], columns = all_data[0])
-	#df2 = df.loc[:,['代號', '名稱', '外資及陸資淨買股數', '投信淨買股數', '自營淨買股數']]
+	df = pd.DataFrame(all_data[1:], columns = all_data[0])
+	df2 = df.loc[:,['代號', '名稱', '外資及陸資淨買股數', '投信淨買股數', '自營淨買股數']]
 	#print(df2)
 
 	#寫入、更新資料庫
-	#STORE_DB(df2, arg_date)
+	STORE_DB(df2, arg_date)
 
 def STORE_DB(arg_df, arg_date):
 	global err_flag
@@ -201,8 +211,8 @@ start_date = parser.parse(str(start_date)).strftime("%Y%m%d")
 end_date = parser.parse(str(dt)).strftime("%Y%m%d")
 
 #for需要時手動設定日期區間用
-start_date = "20170609"
-end_date = "20170609"
+#start_date = "20170609"
+#end_date = "20170609"
 
 # 寫入LOG File
 str_date = str(datetime.datetime.now())

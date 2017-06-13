@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan  9 09:11:25 2017
+證交所三大法人個股買賣超日報~每日收盤CSV檔讀取並寫入資料庫
 
-@author: bryson0083
+@author: Bryson Xue
+@target_rul: 
+
+@Note: 
+	證交所三大法人個股買賣超日報
+	讀取下載後的CSV檔，寫入資料庫
+	
 """
 import csv
 import pandas as pd
@@ -75,7 +81,9 @@ def READ_CSV(arg_date):
 
 	except Exception as e:
 		print("$$$ Err:" + arg_date + " 三大法人個股買賣超CSV資料讀取異常. $$$")
+		print(e)
 		file.write("$$$ Err:" + arg_date + " 三大法人個股買賣超CSV資料讀取異常. $$$")
+		file.write(e)
 		err_flag = True
 	
 	#all_data list拋到pandas
@@ -199,8 +207,8 @@ start_date = parser.parse(str(start_date)).strftime("%Y%m%d")
 end_date = parser.parse(str(dt)).strftime("%Y%m%d")
 
 #for需要時手動設定日期區間用
-start_date = "20170608"
-end_date = "20170608"
+#start_date = "20170609"
+#end_date = "20170609"
 
 # 寫入LOG File
 str_date = str(datetime.datetime.now())
