@@ -231,8 +231,8 @@ start_date = parser.parse(str(start_date)).strftime("%Y%m%d")
 end_date = parser.parse(str(dt)).strftime("%Y%m%d")
 
 #for需要時手動設定日期區間用
-#start_date = "20170618"
-#end_date = "20170618"
+start_date = "20170101"
+end_date = "20170619"
 
 # 寫入LOG File
 str_date = str(datetime.datetime.now())
