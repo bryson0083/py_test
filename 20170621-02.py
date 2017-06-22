@@ -13,6 +13,7 @@
 @Ref:
 	http://www.largitdata.com/course/53/
 """
+import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -31,114 +32,123 @@ def DO_WAIT():
 	print("間隔等待 " + str(sleep_sec) + " secs.\n")
 	time.sleep(sleep_sec)
 
-def GET_DATA(arg_date):
+def GET_DATE_LIST():
 	global err_flag
 	rt_flag = True
-
-	yyyy = str(arg_date[0:4])
-	mm = str(arg_date[4:6])
-	dd = str(arg_date[6:8])
 
 	headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
 	session = requests.session()
 
 	# 拋送查詢條件到頁面，並取回查詢結果內容
-	URL = 'http://www.tdcc.com.tw/smWeb/QryStock.jsp?SCA_DATE=20170616&SqlMethod=StockNo&StockNo=9962&StockName=&sub=%ACd%B8%DF'
-	r = requests.get(URL, headers=headers)
-	r.encoding = 'big5'
+	try:
+		URL = 'http://www.tdcc.com.tw/smWeb/QryStock.jsp'
+		r = requests.get(URL, headers=headers)
+		r.raise_for_status()	#https://stackoverflow.com/questions/15258728/requests-how-to-tell-if-youre-getting-a-404
+		r.encoding = 'big5'
+	except Exception as e:
+		err_flag = True
+		print("Err from GET_DATE_LIST(): \n$$$ 集保中心網站讀取錯誤，請確認網頁是否正常. $$$\n" + str(e) + "\n")
+		file.write("Err from GET_DATE_LIST(): \n$$$ 集保中心網站讀取錯誤，請確認網頁是否正常. $$$\n" + str(e) + "\n")
+		return []
+
+	sp = BeautifulSoup(r.text, 'html.parser')
+	opt = sp.select('option')
+
+	dt_list = [item.text.strip() for item in opt]
+	dt_list = sorted(dt_list, reverse=False)
+	#print(dt_list)
+	
+	return dt_list
+
+
+def GET_DATA(arg_stock, arg_date):
+	global err_flag
+	rt_flag = True
+
+	sear_comp_id = arg_stock[0]
+	comp_id = arg_stock[0].replace(".TW","")
+	comp_name = arg_stock[1]
+	print("\n抓取" + sear_comp_id + " " + comp_name + " 日期" + arg_date + "集保戶股權分散資料.")
+
+	headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
+	session = requests.session()
+
+	# 拋送查詢條件到頁面，並取回查詢結果內容
+	try:
+		URL = 'http://www.tdcc.com.tw/smWeb/QryStock.jsp?SCA_DATE=' + arg_date + '&SqlMethod=StockNo&StockNo=' + comp_id + '&StockName=&sub=%ACd%B8%DF'
+		r = requests.get(URL, headers=headers)
+		r.raise_for_status()
+		r.encoding = 'big5'
+	except Exception as e:
+		err_flag = True
+		rt_flag = False
+		print("Err from GET_DATA(): \n")
+		print("$$$ 抓取" + sear_comp_id + " " + comp_name + " 日期 " + arg_date + " 集保戶股權分散資料失敗.$$$\n" + str(e) + "\n")
+		file.write("Err from GET_DATA(): \n")
+		file.write("$$$ 抓取" + sear_comp_id + " " + comp_name + " 日期 " + arg_date + " 集保戶股權分散資料失敗.$$$\n" + str(e) + "\n")
+		return []
+
 	sp = BeautifulSoup(r.text, 'html.parser')
 	tb = sp.select('.mt')[1]
 	#print(tb)
 
 	all_data = []
 	for tr in tb.select('tr'):
-		rdata = [td.text.replace(",","").strip() for td in tr.select('td')]
+		rdata = [td.text.replace("\u3000","").replace(",","").strip() for td in tr.select('td')]
 		all_data.append(rdata)
 	
-	print(all_data)
-	"""
-		try:
-			#判斷查詢日期當天是否有資料
-			#若當天無資料，則還是產生一個檔案，並回到主程式
-			tag_h3 = sp.find('h3')
-			h3_text = tag_h3.findAll(lambda tag: tag.name=='font')
-			msg_posi = str(h3_text).find("查無所需資料")
+	ls_head = ['SEQ', 'LV_DESC', 'NUM_OF_PEOPLE', 'STOCK_SHARES', 'PER_CENT_RT']
+	#df = pd.DataFrame(all_data[1:len(all_data)-1], columns=ls_head)	#最後一筆合計資料不要
+	df = pd.DataFrame(all_data[1:], columns=ls_head)	#最後一筆合計資料不要
 
-			if msg_posi >= 0:
-				# 若當天無資料，還是產生一個檔案
-				file2 = open(file_name, "a", encoding="big5")
-				file2.write("當天無交易資料")
-				file2.close()
-				return rt_flag
+	#插入其他必要欄位
+	df['QUO_DATE'] = arg_date
+	df['SEAR_COMP_ID'] = sear_comp_id
+	df['COMP_NAME'] = comp_name
 
-		except Exception as e:
-			#抓不到tag資料，表示網頁有抓到資料
-			pass
+	# 最後維護日期時間
+	str_date = str(datetime.datetime.now())
+	date_last_maint = parser.parse(str_date).strftime("%Y%m%d")
+	time_last_maint = parser.parse(str_date).strftime("%H%M%S")
+	prog_last_maint = "GET_TDCC_STOCK_DISPERSION"
+	df['DATE_LAST_MAINT'] = date_last_maint
+	df['TIME_LAST_MAINT'] = time_last_maint
+	df['PROG_LAST_MAINT'] = prog_last_maint
 
-		try:
-			#當天有交易資料，讀取網頁table資料
-			table = sp.find('table', {"border":"1"})
-			rows = table.findAll(lambda tag: tag.name=='tr')
+	colorder = ('QUO_DATE', 'SEAR_COMP_ID', 'COMP_NAME', 'SEQ', 'LV_DESC', 'NUM_OF_PEOPLE', 'STOCK_SHARES', 'PER_CENT_RT', 'DATE_LAST_MAINT', 'TIME_LAST_MAINT', 'PROG_LAST_MAINT')
+	df = df.reindex_axis(colorder, axis=1)	#調整datagrame欄位順序	http://nullege.com/codes/search/pandas.DataFrame.reindex_axis
 
-			i = 0
-			rhead = []
-			all_data = []
-			for row in rows:
-				#print(row)	
-				if i==1:	#讀取表格抬頭
-					rhead = [row_th.text for row_th in row.select('th')]
+	df.to_sql(name='STOCK_DISPERSION', con=conn, index=False, if_exists='replace')
 
-				if i > 1:	# 讀取表格資料
-					rdata = [row_td.text.strip() for row_td in row.select('td')]
-					rdata = [x for x in rdata if x != []]
-					#print(rdata)
-					all_data.append(rdata)
-
-				i += 1
-
-			df = pd.DataFrame(data=all_data, columns=rhead)
-			#print(df)
-
-			#DataFrame資料寫入csv檔案保存起來
-			df.to_csv(file_name, index=False)
-
-			DO_WAIT()	# 避免過度讀取網站，隨機間隔時間再讀取網頁
-
-		except Exception as e:
-			err_flag = True
-			rt_flag = False
-			print("$$$ 判斷網頁有資料，抓取出現異常，確認是否原始網頁結構已修改. $$$\n")
-			print(str(e))
-			file.write("$$$ 判斷網頁有資料，抓取出現異常，確認是否原始網頁結構已修改. $$$\n")
-			file.write(str(e))
-	"""
-
+	#print(df)
 	return rt_flag
+
+
 
 ############################################################################
 # Main                                                                     #
 ############################################################################
-print("Executing GET_DAILY_FR_HOLDING_SHARES_SQ ...\n\n")
+print("Executing GET_TDCC_STOCK_DISPERSION ...\n\n")
 global err_flag
 err_flag = False
 
 #LOG檔
 str_date = str(datetime.datetime.now())
 str_date = parser.parse(str_date).strftime("%Y%m%d")
-name = "GET_DAILY_FR_HOLDING_SHARES_SQ_LOG_" + str_date + ".txt"
+name = "GET_TDCC_STOCK_DISPERSION_LOG_" + str_date + ".txt"
 file = open(name, "a", encoding="UTF-8")
 
 print_dt = str(str_date) + (' ' * 22)
 print("##############################################")
 print("##           集保戶股權分散表查詢           ##")
-print("##              分類項目:全部               ##")
+print("##             (上市、上櫃股票)             ##")
 print("##                                          ##")
 print("##  datetime: " + print_dt +               "##")
 print("##############################################")
 
-#依據所選模式，決定起訖日期
-#mode A:跑當天日期到往前推7天
-#mode B:跑昨天日期到往前推7天
+#依據所選模式，決定抓取方式
+#mode A:抓取最近一周資料
+#mode B:抓取日期清單所有資料
 try:
 	run_mode = sys.argv[1]
 	run_mode = run_mode.upper()
@@ -146,35 +156,58 @@ except Exception as e:
 	run_mode = "A"
 
 print("you choose mode " + run_mode)
-
-dt = datetime.datetime.now()
 if run_mode == "A":
-	print("A: 抓取到當天資料...\n")
-	file.write("A: 抓取到當天資料...\n")
-	start_date = dt + datetime.timedelta(days=-7)
-	start_date = parser.parse(str(start_date)).strftime("%Y%m%d")
-	end_date = parser.parse(str(dt)).strftime("%Y%m%d")
+	print("A: 抓取最近一周資料...\n")
+	file.write("A: 抓取最近一周資料...\n")
 elif run_mode == "B":
-	print("B: 抓取到昨天資料...\n")
-	file.write("B: 抓取到昨天資料...\n")
-	start_date = dt + datetime.timedelta(days=-8)
-	start_date = parser.parse(str(start_date)).strftime("%Y%m%d")
-	end_date = dt + datetime.timedelta(days=-1)
-	end_date = parser.parse(str(end_date)).strftime("%Y%m%d")
+	print("B: 抓取日期清單所有資料...\n")
+	file.write("B: 抓取日期清單所有資料...\n")
 else:
 	print("模式錯誤，結束程式...\n")
 	file.write("模式錯誤，結束程式...\n")
 	sys.exit("模式錯誤，結束程式...\n")
 
-#for需要時手動設定日期區間用(資料最早日期20040801起)
-start_date = "20170616"
-end_date = "20170616"
-
-print("結轉日期" + start_date + "~" + end_date)
-
 tStart = time.time()#計時開始
 file.write("\n\n\n*** LOG datetime  " + str(datetime.datetime.now()) + " ***\n")
-file.write("結轉日期" + start_date + "~" + end_date + "\n")
+#file.write("結轉日期" + start_date + "~" + end_date + "\n")
+
+#建立資料庫連線
+conn = sqlite3.connect("market_price.sqlite")
+
+#抓取網站日期清單
+dt_list = GET_DATE_LIST()
+#print(dt_list)
+
+#依據所選模式抓取資料
+if len(dt_list) > 0:
+	#讀取上市櫃股票清單
+	strsql  = "select SEAR_COMP_ID,COMP_NAME, STOCK_TYPE from STOCK_COMP_LIST "
+	#strsql += "where SEAR_COMP_ID = '0050.TW' "
+	strsql += "order by STOCK_TYPE, SEAR_COMP_ID "
+	strsql += "limit 2"
+
+	cursor = conn.execute(strsql)
+	result = cursor.fetchall()
+
+	df_result = pd.DataFrame()
+	if len(result) > 0:
+		for stock in result:
+			#print(stock)
+
+			if run_mode == "A":
+				str_date = str(dt_list[-1:][0])
+				#print(str_date)
+				rt = GET_DATA(stock, str_date)
+				DO_WAIT()	# 避免過度讀取網站，隨機間隔時間再讀取網頁
+
+	#關閉cursor
+	cursor.close()
+else:
+	print("$$$ 未取得日期清單資料，請確認來源網頁是否正常 $$$")
+
+
+
+"""
 
 date_fmt = "%Y%m%d"
 a = datetime.datetime.strptime(start_date, date_fmt)
@@ -195,7 +228,8 @@ while i <= (int_diff_date+1):
 
 	#print(str_date + "\n")
 	print("擷取 " + str_date + " 集保戶股權分散表查詢.\n")
-	rt = GET_DATA(str_date)
+	#rt = GET_DATA(str_date)
+	rt = GET_DATE_LIST()
 
 	if rt == True:
 		cnt += 1
@@ -211,12 +245,20 @@ while i <= (int_diff_date+1):
 	#	file.write("抓滿90天，強制結束.\n")
 	#	break
 
+
+
+
+"""
+
 tEnd = time.time()#計時結束
 file.write("\n\n\n結轉耗時 %f sec\n" % (tEnd - tStart)) #會自動做進位
 file.write("*** End LOG ***\n")
 
 # Close File
 file.close()
+
+#關閉資料庫連線
+conn.close()
 
 #若執行過程無錯誤，執行結束後刪除log檔案
 if err_flag == False:
