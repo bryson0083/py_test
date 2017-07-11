@@ -41,7 +41,6 @@ def Login_nvesto():
 
 	acc_id = data['nvesto']['id']
 	acc_pwd = data['nvesto']['pwd']
-	
 	#print('acc=' + acc_id)
 	#print('pwd=' + acc_pwd)
 
@@ -72,10 +71,11 @@ def Login_nvesto():
 
 	return flag
 
+
 def READ_BROKER_BS(arg_df, arg_date):
 	global err_flag, s, headers
-	print(arg_date)
-	#print(arg_df['COMP_ID'])
+	#print(arg_date)
+	#print(arg_df)
 
 	for i in range(0,len(arg_df)):
 		comp_id = str(arg_df.loc[i]['COMP_ID'])
@@ -237,72 +237,3 @@ if err_flag == False:
 	os.remove(name)
 
 print("End of prog...")
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Web Session, Header設定
-#s = requests.session()
-#headers = {'User-Agent':'User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'}
-
-#登入網站
-#Login_nvesto = Login_nvesto(s)
-#print(Login_nvesto)
-
-#讀取查詢網頁結果
-#URL = 'https://www.nvesto.com/tpe/2034/majorForce#!/fromdate/2017-07-04/todate/2017-07-04/view/summary'
-#r = s.get(URL, headers=headers)
-#sp = BeautifulSoup(r.text, 'html.parser')
-#rt_msg = sp.findAll('script', type="text/javascript")[4]
-#print(rt_msg)
-
-#For test 讀取local網頁存檔
-#f=codecs.open("C:/Users/bryson0083/Desktop/Nvesto.html", 'r',encoding = 'utf8')
-#data = f.read()
-#sp = BeautifulSoup(data, 'html.parser')
-#rt_msg = sp.findAll('script', type="text/javascript")[6]
-#print(rt_msg)
-
-"""
-#讀取券商進出(買超)
-str_buy = rt_msg
-msg_posi = str(str_buy).find("MajorForce_JS_VARS")
-str_buy = str(str_buy)[msg_posi:]
-msg_posi = str(str_buy).find("[")
-str_buy = str(str_buy)[msg_posi:]
-msg_posi = str(str_buy).find("]")
-str_buy = str(str_buy)[:msg_posi+1]
-
-js_buy_data = json.loads(str_buy)
-df_buy = pd.DataFrame.from_dict(js_buy_data, orient='columns')
-df_buy = df_buy.loc[:,['name', 'buy', 'sell', 'net', 'price', 'level']]
-print(df_buy)
-
-
-print("\n\n\n")
-
-#讀取券商進出(賣超)
-str_sell = rt_msg
-msg_posi = str(str_sell).find("MajorForce_JS_VARS")
-str_sell = str(str_sell)[msg_posi:]
-msg_posi = str(str_sell).find("[")
-str_sell = str(str_sell)[msg_posi+1:]
-msg_posi = str(str_sell).find("[")
-str_sell = str(str_sell)[msg_posi:]
-msg_posi = str(str_sell).find("]")
-str_sell = str(str_sell)[:msg_posi+1]
-
-js_sell_data = json.loads(str_sell)
-df_sell = pd.DataFrame.from_dict(js_sell_data, orient='columns')
-df_sell = df_sell.loc[:,['name', 'buy', 'sell', 'net', 'price', 'level']]
-print(df_sell)
-"""
