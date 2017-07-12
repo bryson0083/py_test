@@ -22,6 +22,7 @@ GET_BROKER_TRADING.py
 import os
 import time
 import datetime
+from random import randint
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -30,6 +31,32 @@ import pandas as pd
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 import sqlite3
+
+def DO_WAIT():
+	#隨機等待一段時間
+	#sleep_sec = randint(30,120)
+	sleep_sec = randint(5,10)
+	print("間隔等待 " + str(sleep_sec) + " secs.\n")
+	time.sleep(sleep_sec)
+
+
+def CHK_DATA_EXIST(arg_sear_comp_id, arg_quo_date):
+	arg_quo_date = parser.parse(arg_quo_date).strftime("%Y%m%d")
+
+	#檢查當天該股票是否已有資料
+	strsql  = "select count(*) from STOCK_BROKER_BS "
+	strsql += "where "
+	strsql += "QUO_DATE = '" + arg_quo_date + "' and "
+	strsql += "SEAR_COMP_ID = '" + arg_sear_comp_id + "' "
+
+	cursor = conn.execute(strsql)
+	result = cursor.fetchone()
+	rows_cnt = result[0]
+
+	#關閉cursor
+	cursor.close()
+
+	return rows_cnt
 
 def Login_nvesto():
 	global err_flag, s, headers
@@ -78,58 +105,129 @@ def READ_BROKER_BS(arg_df, arg_date):
 	#print(arg_df)
 
 	for i in range(0,len(arg_df)):
+		sear_comp_id = str(arg_df.loc[i]['SEAR_COMP_ID'])
 		comp_id = str(arg_df.loc[i]['COMP_ID'])
+		comp_name = str(arg_df.loc[i]['COMP_NAME'])
 		#print(comp_id)
 
-		#讀取查詢網頁結果
-		#URL = 'https://www.nvesto.com/tpe/2034/majorForce#!/fromdate/2017-07-04/todate/2017-07-04/view/summary'
-		URL = 'https://www.nvesto.com/tpe/' + comp_id + '/majorForce#!/fromdate/' + arg_date + '/todate/' + arg_date + '/view/summary'
-		r = s.get(URL, headers=headers)
-		sp = BeautifulSoup(r.text, 'html.parser')
-		rt_msg = sp.findAll('script', type="text/javascript")[4]
-		#print(rt_msg)
+		#檢查資料庫是否已有資料存在，若已有資料則略過，減少網站讀取
+		rt_cnt = CHK_DATA_EXIST(sear_comp_id, arg_date)
+		#print("rt_cnt=" + str(rt_cnt))
+		if rt_cnt == 0:	#確認資料庫無資料，讀取網頁資料
+			print("抓取" + sear_comp_id + " " + comp_name + " 日期:" + arg_date + " 券商進出分點資料.")
+			file.write("抓取" + sear_comp_id + " " + comp_name + " 日期:" + arg_date + " 券商進出分點資料.")
 
-		#For test 讀取local網頁存檔
-		#f=codecs.open("C:/Users/bryson0083/Desktop/Nvesto.html", 'r',encoding = 'utf8')
-		#data = f.read()
-		#sp = BeautifulSoup(data, 'html.parser')
-		#rt_msg = sp.findAll('script', type="text/javascript")[6]
-		#print(rt_msg)
+			all_df = pd.DataFrame()
 
-		#讀取券商進出(買超)
-		str_buy = rt_msg
-		msg_posi = str(str_buy).find("MajorForce_JS_VARS")
-		str_buy = str(str_buy)[msg_posi:]
-		msg_posi = str(str_buy).find("[")
-		str_buy = str(str_buy)[msg_posi:]
-		msg_posi = str(str_buy).find("]")
-		str_buy = str(str_buy)[:msg_posi+1]
+			#讀取查詢網頁結果
+			URL = 'https://www.nvesto.com/tpe/' + comp_id + '/majorForce#!/fromdate/' + arg_date + '/todate/' + arg_date + '/view/summary'
+			r = s.get(URL, headers=headers)
+			sp = BeautifulSoup(r.text, 'html.parser')
+			rt_msg = sp.findAll('script', type="text/javascript")[4]
+			#print(rt_msg)
 
-		js_buy_data = json.loads(str_buy)
-		df_buy = pd.DataFrame.from_dict(js_buy_data, orient='columns')
-		df_buy = df_buy.loc[:,['name', 'buy', 'sell', 'net', 'price', 'level']]
-		print(df_buy)
+			#For test 讀取local網頁存檔
+			#f=codecs.open("C:/Users/bryson0083/Desktop/Nvesto.html", 'r',encoding = 'utf8')
+			#data = f.read()
+			#sp = BeautifulSoup(data, 'html.parser')
+			#rt_msg = sp.findAll('script', type="text/javascript")[6]
+			#print(rt_msg)
+
+			#讀取券商進出(買超)
+			str_buy = rt_msg
+			msg_posi = str(str_buy).find("MajorForce_JS_VARS")
+			str_buy = str(str_buy)[msg_posi:]
+			msg_posi = str(str_buy).find("[")
+			str_buy = str(str_buy)[msg_posi:]
+			msg_posi = str(str_buy).find("]")
+			str_buy = str(str_buy)[:msg_posi+1]
+
+			js_buy_data = json.loads(str_buy)
+			df_buy = pd.DataFrame.from_dict(js_buy_data, orient='columns')
+			df_buy = df_buy.loc[:,['name', 'buy', 'sell', 'net', 'price', 'level']]
+			#print(df_buy)
+			all_df = pd.concat([all_df,df_buy],ignore_index=True)
+
+			#讀取券商進出(賣超)
+			str_sell = rt_msg
+			msg_posi = str(str_sell).find("MajorForce_JS_VARS")
+			str_sell = str(str_sell)[msg_posi:]
+			msg_posi = str(str_sell).find("[")
+			str_sell = str(str_sell)[msg_posi+1:]
+			msg_posi = str(str_sell).find("[")
+			str_sell = str(str_sell)[msg_posi:]
+			msg_posi = str(str_sell).find("]")
+			str_sell = str(str_sell)[:msg_posi+1]
+
+			js_sell_data = json.loads(str_sell)
+			df_sell = pd.DataFrame.from_dict(js_sell_data, orient='columns')
+			df_sell = df_sell.loc[:,['name', 'buy', 'sell', 'net', 'price', 'level']]
+			#print(df_sell)
+			all_df = pd.concat([all_df,df_sell],ignore_index=True)
+			#print(all_df)
+
+			#資料寫入料庫
+			arg_ls = [arg_date, sear_comp_id, comp_name]
+			flag = STORE_DB(arg_ls, all_df)
+
+			if flag == True:
+				print("資料庫寫入成功.\n")
+				file.write("資料庫寫入成功.\n")
+
+			DO_WAIT()	# 避免過度讀取網站，隨機間隔時間再讀取網頁
+
+		else:
+			err_flag = True
+			print(sear_comp_id + " " + comp_name + " 日期" + arg_date + " 資料筆數=" + str(rt_cnt) + " 資料已存在，不再重新抓取.\n")
+			file.write(sear_comp_id + " " + comp_name + " 日期" + arg_date + " 資料筆數=" + str(rt_cnt) +  " 資料已存在，不再重新抓取.\n")
 
 
-		print("\n\n\n")
+def STORE_DB(arg_ls, arg_df):
+	global err_flag
+	rt_flag = True
 
-		#讀取券商進出(賣超)
-		str_sell = rt_msg
-		msg_posi = str(str_sell).find("MajorForce_JS_VARS")
-		str_sell = str(str_sell)[msg_posi:]
-		msg_posi = str(str_sell).find("[")
-		str_sell = str(str_sell)[msg_posi+1:]
-		msg_posi = str(str_sell).find("[")
-		str_sell = str(str_sell)[msg_posi:]
-		msg_posi = str(str_sell).find("]")
-		str_sell = str(str_sell)[:msg_posi+1]
+	quo_date = parser.parse(arg_ls[0]).strftime("%Y%m%d")
+	sear_comp_id = arg_ls[1]
+	comp_name = arg_ls[2]
+	df = arg_df
 
-		js_sell_data = json.loads(str_sell)
-		df_sell = pd.DataFrame.from_dict(js_sell_data, orient='columns')
-		df_sell = df_sell.loc[:,['name', 'buy', 'sell', 'net', 'price', 'level']]
-		print(df_sell)
+	#資料寫入資料庫
+	for index, row in df.iterrows():
+		# 最後維護日期時間
+		str_date = str(datetime.datetime.now())
+		date_last_maint = parser.parse(str_date).strftime("%Y%m%d")
+		time_last_maint = parser.parse(str_date).strftime("%H%M%S")
+		prog_last_maint = "GET_BROKER_TRADING"
 
+		strsql  = "insert into STOCK_BROKER_BS ('QUO_DATE', 'SEAR_COMP_ID', 'COMP_NAME', 'BROKER_NAME', 'BUY_VOL', 'SELL_VOL', 'NET_VOL', 'AVG_PRICE', 'LV', 'DATE_LAST_MAINT', 'TIME_LAST_MAINT', 'PROG_LAST_MAINT') values ("
+		strsql += "'" + quo_date + "', "
+		strsql += "'" + sear_comp_id + "', "
+		strsql += "'" + comp_name + "', "
+		strsql += "'" + row['name'] + "', "
+		strsql += str(row['buy']) + ", "
+		strsql += str(row['sell']) + ", "
+		strsql += str(row['net']) + ", "
+		strsql += str(row['price']) + ", "
+		strsql += str(row['level']) + ", "
+		strsql += "'" + date_last_maint + "', "
+		strsql += "'" + time_last_maint + "', "
+		strsql += "'" + prog_last_maint + "' "
+		strsql += ")"
 
+		try :
+			#print(strsql)
+			conn.execute(strsql)
+			conn.commit()
+		except sqlite3.Error as er:
+			err_flag = True
+			rt_flag = False
+			conn.execute("rollback")
+			print("insert STOCK_BROKER_BS er=" + er.args[0] + "\n")
+			print(strsql + "\n")
+			file.write("insert STOCK_BROKER_BS er=" + er.args[0] + "\n")
+			file.write(strsql + "\n")
+
+	return rt_flag
 
 #############################################################################
 # Main																		#
@@ -170,7 +268,9 @@ file.write("\n\n\n*** LOG datetime  " + str(datetime.datetime.now()) + " ***\n")
 Login_nvesto = Login_nvesto()
 #print(Login_nvesto)
 
-if Login_nvesto == False:
+if Login_nvesto == True:
+	print("Nvesto網站登入成功. \n")
+else:
 	file.write("$$$ Nvesto網站登入失敗，程式中止. $$$")
 	sys.exit("$$$ Nvesto網站登入失敗，程式中止. $$$")
 
@@ -180,9 +280,9 @@ if Login_nvesto == False:
 
 #讀取上市櫃公司清單
 strsql  = "select SEAR_COMP_ID, COMP_ID, COMP_NAME, STOCK_TYPE from STOCK_COMP_LIST "
-strsql += "where SEAR_COMP_ID = '2034.TW' "
+#strsql += "where SEAR_COMP_ID = '2034.TW' "
 strsql += "order by STOCK_TYPE, SEAR_COMP_ID "
-strsql += "limit 1"
+strsql += "limit 2"
 
 df = pd.read_sql_query(strsql, conn)
 #print(df)
