@@ -19,6 +19,7 @@ mode_a:
 
 GET_BROKER_TRADING.py
 """
+from selenium import webdriver
 import os
 import time
 import datetime
@@ -31,8 +32,8 @@ from dateutil import parser
 from dateutil.relativedelta import relativedelta
 import sqlite3
 
-def Login_nvesto():
-	global err_flag, s, headers
+def Login_nvesto(s):
+	#global s, headers
 	flag = False
 
 	#讀取帳密參數檔
@@ -73,33 +74,42 @@ def Login_nvesto():
 	return flag
 
 
+global s, headers
+
+driver = webdriver.PhantomJS() # or add to your PATH
+
+
 #Web Session, Header設定
 s = requests.session()
 headers = {'User-Agent':'User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'}
 
 #登入網站
-#Login_nvesto = Login_nvesto(s)
-#print(Login_nvesto)
+Login_nvesto = Login_nvesto(s)
+print(Login_nvesto)
 
 #讀取查詢網頁結果
-#URL = 'https://www.nvesto.com/tpe/2034/majorForce#!/fromdate/2017-07-04/todate/2017-07-04/view/summary'
-#r = s.get(URL, headers=headers)
+URL = 'https://www.nvesto.com/tpe/2034/majorforce#!/fromdate/2017-07-12/todate/2017-07-12/view/summary'
+r = s.get(URL, headers=headers)
+#print(r.text)
 #sp = BeautifulSoup(r.text, 'html.parser')
+sp = BeautifulSoup(r.content)
 #rt_msg = sp.findAll('script', type="text/javascript")[4]
 #print(rt_msg)
 
 #For test 讀取local網頁存檔
-f=codecs.open("C:/Users/bryson0083/Desktop/Nvesto.html", 'r',encoding = 'utf8')
-data = f.read()
-sp = BeautifulSoup(data, 'html.parser')
+#f=codecs.open("C:/Users/bryson0083/Desktop/Nvesto.html", 'r',encoding = 'utf8')
+#data = f.read()
+#print(data)
+#sp = BeautifulSoup(data, 'html.parser')
 
 #rt_msg = sp.findAll('script', type="text/javascript")[6]
 #print(rt_msg)
 
-table_buy = sp.findAll('table', attrs={'class':'table table-bordered'})[1]
+table_buy = sp.findAll('table', attrs={'class':'table table-bordered'})
+#table_buy = sp.findAll('script', attrs={'class':'majorforce-tmpl'})
 print(table_buy)
-table_sell = sp.findAll('table', attrs={'class':'table table-bordered'})[3]
-print(table_sell)
+#table_sell = sp.findAll('table', attrs={'class':'table table-bordered'})[3]
+#print(table_sell)
 
 
 

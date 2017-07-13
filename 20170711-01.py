@@ -164,17 +164,17 @@ def READ_BROKER_BS(arg_df, arg_date):
 			df_sell = df_sell.loc[:,['name', 'buy', 'sell', 'net', 'price', 'level']]
 			#print(df_sell)
 			all_df = pd.concat([all_df,df_sell],ignore_index=True)
-			#print(all_df)
+			print(all_df)
 
 			#資料寫入料庫
 			arg_ls = [arg_date, sear_comp_id, comp_name]
-			flag = STORE_DB(arg_ls, all_df)
+			#flag = STORE_DB(arg_ls, all_df)
 
-			if flag == True:
-				print("資料庫寫入成功.\n")
-				file.write("資料庫寫入成功.\n")
+			#if flag == True:
+			#	print("資料庫寫入成功.\n")
+			#	file.write("資料庫寫入成功.\n")
 
-			DO_WAIT()	# 避免過度讀取網站，隨機間隔時間再讀取網頁
+			#DO_WAIT()	# 避免過度讀取網站，隨機間隔時間再讀取網頁
 
 		else:
 			err_flag = True
@@ -280,9 +280,9 @@ else:
 
 #讀取上市櫃公司清單
 strsql  = "select SEAR_COMP_ID, COMP_ID, COMP_NAME, STOCK_TYPE from STOCK_COMP_LIST "
-#strsql += "where SEAR_COMP_ID = '2034.TW' "
+strsql += "where SEAR_COMP_ID = '2034.TW' "
 strsql += "order by STOCK_TYPE, SEAR_COMP_ID "
-strsql += "limit 2"
+strsql += "limit 1"
 
 df = pd.read_sql_query(strsql, conn)
 #print(df)
