@@ -36,7 +36,7 @@ import sqlite3
 def DO_WAIT():
 	#隨機等待一段時間
 	#sleep_sec = randint(30,120)
-	sleep_sec = randint(5,10)
+	sleep_sec = randint(30,60)
 	print("間隔等待 " + str(sleep_sec) + " secs.\n")
 	time.sleep(sleep_sec)
 
@@ -98,21 +98,25 @@ def READ_BROKER_BS(arg_df, arg_date):
 
 			df_result = pd.DataFrame()
 
-			cnt = 0
-			while True:
-				try:
-					#開啟券商進出分點網頁，讀取執行完後的頁面source code
-					URL = 'https://www.nvesto.com/tpe/' + comp_id + '/majorForce#!/fromdate/' + arg_date + '/todate/' + arg_date + '/view/summary'
-					driver.get(URL)
-					pageSource = driver.page_source
-					#print(pageSource)
-				except Exception as e:
-					cnt += 1
-					if cnt < 3:
-						continue
-					else:
-						break
-				break
+			#cnt = 0
+			#while True:
+			#	try:
+
+			#開啟券商進出分點網頁，讀取執行完後的頁面source code
+			URL = 'https://www.nvesto.com/tpe/' + comp_id + '/majorForce#!/fromdate/' + arg_date + '/todate/' + arg_date + '/view/summary'
+			driver.get(URL)
+			time.sleep(30)
+			pageSource = driver.page_source
+			print(URL)
+			#print(pageSource)
+			
+			#	except Exception as e:
+			#		cnt += 1
+			#		if cnt < 3:
+			#			continue
+			#		else:
+			#			break
+			#	break
 
 			#For test 讀取local網頁存檔
 			#f=codecs.open("C:/Users/bryson0083/Desktop/Nvesto.html", 'r',encoding = 'utf8')
@@ -121,7 +125,7 @@ def READ_BROKER_BS(arg_df, arg_date):
 
 			#讀取網頁SOURCE CODE
 			sp = BeautifulSoup(pageSource, 'html.parser')
-
+			#print(sp)
 			#讀取券商進出分點買賣超資料
 			table_buy = sp.findAll('table', attrs={'class':'table table-bordered'})[1]
 			#print(table_buy)
@@ -140,17 +144,17 @@ def READ_BROKER_BS(arg_df, arg_date):
 			#print(rdata)
 			df = pd.DataFrame(rdata, columns = ['brk_name', 'buy', 'sell', 'net', 'price'])
 			df_result = pd.concat([df_result, df], ignore_index=True)
-			#print(df_result)
+			print(df_result)
 
-			arg_ls = [arg_date, sear_comp_id, comp_name]
-			flag = STORE_DB(arg_ls, df_result)
+			#arg_ls = [arg_date, sear_comp_id, comp_name]
+			#flag = STORE_DB(arg_ls, df_result)
 
-			if flag == True:
-				print("資料庫寫入成功.\n")
-				file.write("資料庫寫入成功.\n")
+			#if flag == True:
+			#	print("資料庫寫入成功.\n")
+			#	file.write("資料庫寫入成功.\n")
 
-			DO_WAIT()	# 避免過度讀取網站，隨機間隔時間再讀取網頁
-
+			#DO_WAIT()	# 避免過度讀取網站，隨機間隔時間再讀取網頁
+			time.sleep(30)
 		else:
 			err_flag = True
 			print(sear_comp_id + " " + comp_name + " 日期" + arg_date + " 資料筆數=" + str(rt_cnt) + " 資料已存在，不再重新抓取.\n")
