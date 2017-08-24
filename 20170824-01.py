@@ -4,7 +4,6 @@ http://pythontrader.blogspot.tw/2015/05/ta-lib-usage-stoch.html
 http://www.bituzi.com/2011/06/kd.html
 """
 
-
 import talib
 from talib import MA_Type
 import sqlite3
@@ -17,7 +16,7 @@ from dateutil import parser
 from dateutil.relativedelta import relativedelta
 import sys, os.path
 import time
-import math, statistics
+#import math, statistics
 
 #K線型態判斷
 def Stock_Ana(arg_stock, str_prev_date, str_today):
@@ -54,22 +53,6 @@ def Stock_Ana(arg_stock, str_prev_date, str_today):
 		last_open = df['open'].tail(1)
 		last_close = df['close'].tail(1)
 		prev_close = df['close'].shift(1).tail(1)
-		avg_vol = stock_vol.mean()	#取平均
-
-		#最近一天交易日，成交量漲幅
-		rt = 0
-		if avg_vol > 0:
-			rt = (last_vol.iloc[0] - avg_vol) / avg_vol * 100
-
-		#最近一天交易日，K棒本體漲幅
-		kbody_chg = 0
-		if last_open.iloc[0] > 0:
-			kbody_chg = (last_close.iloc[0] - last_open.iloc[0]) / last_open.iloc[0] * 100
-
-		#最近一天交易日當天漲幅
-		rise_rt = 0
-		if prev_close.iloc[0] > 0:
-			rise_rt = (last_close.iloc[0] - prev_close.iloc[0]) / prev_close.iloc[0] * 100
 
 		#計算20MA
 		ma20 = talib.MA(npy_close, timeperiod=20, matype=0)
@@ -81,10 +64,6 @@ def Stock_Ana(arg_stock, str_prev_date, str_today):
 		#倒數第2個交易日20MA值
 		prev_20ma = df['ma20'].shift(1).tail(1)
 
-		#print('## last_close=' + str(last_close))
-		#print(prev_close.iloc[0])
-
-
 		# http://www.tadoc.org/indicator/STOCH.htm
 		slowk, slowd = talib.STOCH (npy_high,
 									npy_low,
@@ -95,73 +74,19 @@ def Stock_Ana(arg_stock, str_prev_date, str_today):
 									slowd_period=3,
 									slowd_matype=0)
 
-		print("slowk=" + str(slowk[-1]))
-		print("slowd=" + str(slowd[-1]))
+		#print("slowk=" + str(slowk[-1]))
+		#print("slowd=" + str(slowd[-1]))
 
-		# http://www.tadoc.org/indicator/STOCHF.htm
-		fastk, fastd = talib.STOCHF(npy_high,
-									npy_low,
-									npy_close,
-									fastk_period=9,
-									fastd_period=9,
-									fastd_matype=0)
-
-		print("fastk=" + str(fastk[-1]))
-		print("fastd=" + str(fastd[-1]))
-
-		# http://www.tadoc.org/indicator/STOCHRSI.htm
-		fastk, fastd = talib.STOCHRSI(npy_close,
-									timeperiod=9,
-									fastk_period=3,
-									fastd_period=3,
-									fastd_matype=0)
-
-		print("fastk=" + str(fastk[-1]))
-		print("fastd=" + str(fastd[-1]))
-
+		# 剛突破20MA第一天，KD都位於低檔(以40為界)
 		if (prev_close.iloc[0] <= prev_20ma.iloc[0]) and \
-		   (last_close.iloc[0] > last_20ma.iloc[0]):
-			print("##" + arg_stock[0] + "##" + arg_stock[1]  + "##\n")
+		   (last_close.iloc[0] > last_20ma.iloc[0]) and \
+		   (slowk[-1] <= 40) and \
+		   (slowd[-1] <= 40) and \
+		   (slowk[-1] > slowd[-1]):
+			#print("##" + arg_stock[0] + "##" + arg_stock[1]+ "##" + str(slowk[-1])+ "##" + str(slowd[-1]) + "##\n")
+			ls_result = [[arg_stock[0],arg_stock[1],slowk[-1],slowd[-1]]]
+			df_result = pd.DataFrame(ls_result, columns=['代號', '名稱', 'SLOWK', 'SLOWD'])
 
-
-		"""
-		#三條均線變異數介於0~1間、最近一天成交量相對平均量成長20%、當天上漲3%以下、
-		#最近一天收盤價在8MA跟50MA之上、成交量均量需大於500張
-		if (var_val > 0 and var_val < 1) and \
-		   rt >= 20 and \
-		   (rise_rt > 0 and rise_rt < 3) and \
-		   (last_close.iloc[0] > last_8ma.iloc[0]) and \
-		   (last_close.iloc[0] > last_50ma.iloc[0]) and \
-		   avg_vol > 500:
-
-			#讀取個股籌碼資料
-			strsql  = "select FR_BAS_CNT, IT_BAS_CNT, DE_BAS_CNT, RANK "
-			strsql += "from REPORT_CHIP_ANA "
-			strsql += "where "
-			strsql += "SEAR_COMP_ID='" + sear_comp_id + "' "
-
-			cursor = conn.execute(strsql)
-			result = list(cursor.fetchone())
-
-			if len(result) > 0:
-				fr_bas_cnt = str(result[0])
-				it_bas_cnt = str(result[1])
-				de_bas_cnt = str(result[2])
-				rank = result[3]
-			else:
-				fr_bas_cnt = "0"
-				it_bas_cnt = "0"
-				de_bas_cnt = "0"
-				rank = " "
-
-			#關閉cursor
-			cursor.close()
-
-			#print("##" + arg_stock[0] + "##" + arg_stock[1] + "##" + fr_bas_cnt + "##" + it_bas_cnt + "##" + de_bas_cnt + "##" + rank + "##\n")
-
-			ls_result = [[arg_stock[0],arg_stock[1],var_val,rt,fr_bas_cnt,it_bas_cnt,de_bas_cnt,rank]]
-			df_result = pd.DataFrame(ls_result, columns=['代號', '名稱', 'var', 'burst_rt','外資買賣超天數','投信買賣超天數','自營商買賣超天數','類別'])
-		"""
 	if len(ls_result) == 0:
 		df_result = pd.DataFrame()
 
@@ -196,7 +121,7 @@ conn = sqlite3.connect("market_price.sqlite")
 strsql  = "select SEAR_COMP_ID,COMP_NAME, STOCK_TYPE from STOCK_COMP_LIST "
 #strsql += "where SEAR_COMP_ID='0050.TW' "
 strsql += "order by STOCK_TYPE, SEAR_COMP_ID "
-strsql += "limit 1 "
+#strsql += "limit 300 "
 
 cursor = conn.execute(strsql)
 result = cursor.fetchall()
@@ -204,18 +129,15 @@ result = cursor.fetchall()
 df_result = pd.DataFrame()
 if len(result) > 0:
 	for stock in result:
-		print(stock)
-		Stock_Ana(stock, str_prev_date, str_today)
+		#print(stock)
+		try:
+			df = Stock_Ana(stock, str_prev_date, str_today)
 
-
-#		try:
-#			df = Stock_Ana(stock, str_prev_date, str_today)
-#
-#			if len(df)>0:
-#				df_result = pd.concat([df_result, df], ignore_index=True)
-#		except Exception as e:
-#			err_flag = True
-#			print("Function Stock_Ana raise exception:\n" + str(e) + "\n")
+			if len(df)>0:
+				df_result = pd.concat([df_result, df], ignore_index=True)
+		except Exception as e:
+			err_flag = True
+			print("Function Stock_Ana raise exception:\n" + str(e) + "\n")
 
 #關閉cursor
 cursor.close()
@@ -223,10 +145,9 @@ cursor.close()
 #關閉資料庫連線
 conn.close()
 
-"""
 #資料進行排序
 if len(df_result)>0:
-	df_result = df_result.sort_values(by=['類別', 'var', 'burst_rt'], ascending=[True, True, False])
+	df_result = df_result.sort_values(by=['SLOWK', 'SLOWD', '代號'], ascending=[True, True, True])
 
 #結果寫入EXCEL檔
 file_name = 'STOCK_SELECT_TYPE11_' + str_date + '.xlsx'
@@ -244,5 +165,5 @@ file.close()
 #若執行過程無錯誤，執行結束後刪除log檔案
 if err_flag == False:
 	os.remove(name)
-"""
+
 print("End of prog.")
