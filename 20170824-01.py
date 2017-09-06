@@ -1,4 +1,16 @@
+# -*- coding: utf-8 -*-
 """
+選股
+
+@author: Bryson Xue
+@target_rul: 
+	查詢網頁 => http://www.tdcc.com.tw/smWeb/QryStock.jsp
+@Note: 
+	集保中心~集保戶股權分散表查詢
+	每日資料結轉寫入資料庫
+	抓取目標為上市、上櫃股票
+
+@Ref:
 http://www.cmoney.tw/learn/course/technicals/topic/484
 http://pythontrader.blogspot.tw/2015/05/ta-lib-usage-stoch.html
 http://www.bituzi.com/2011/06/kd.html
@@ -48,9 +60,6 @@ def Stock_Ana(arg_stock, str_prev_date, str_today):
 		npy_low = np.array(df['low'])
 		npy_close = np.array(df['close'])
 
-		stock_vol = df['vol'].tail(6)/1000	#取近六天成交量，並由股換算為張
-		last_vol = df['vol'].tail(1)/1000	#取最近一天成交量，並換算為張
-		last_open = df['open'].tail(1)
 		last_close = df['close'].tail(1)
 		prev_close = df['close'].shift(1).tail(1)
 
