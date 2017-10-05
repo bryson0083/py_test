@@ -8,6 +8,7 @@ python-docx lib test
     1. 測試如何產生docx file
     2. 測試如何做簡單的格式控制
     3. pip install python-docx
+    4. Ref doc => https://python-docx.readthedocs.io/en/latest/
 """
 
 from docx import Document
