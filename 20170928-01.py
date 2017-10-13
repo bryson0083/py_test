@@ -26,6 +26,11 @@ obj_font.size = Pt(10)
 #obj_font.name = 'Times New Roman'
 obj_font.name = '標楷體'
 
+
+mystyle = document.styles.add_style('mystyle', WD_STYLE_TYPE.CHARACTER)
+
+
+
 #文件title
 document.add_heading('Heading Title', level=0)
 
@@ -33,13 +38,22 @@ document.add_heading('Heading Title', level=0)
 paragraph = document.add_paragraph()
 
 #中文字似乎套用字型都無效，英文則無問題
-run = paragraph.add_run('test test test', style = 'CommentsStyle')
+run = paragraph.add_run('test test test\n', style = 'CommentsStyle')
 #run = paragraph.add_run(u'中文字中文字中文字', style = 'CommentsStyle')
 run.italic = True	#斜體
 run.bold = True		#粗體
 
+
+
+# apply the custom on the run
+run2 = paragraph.add_run('abcdefgh')
+run2.style = mystyle
+font = run2.font
+font.rtl = True
+
+
 #加入表格
-t = document.add_table(rows=4, cols=2)
+t = document.add_table(rows=5, cols=2)
 
 #可用table styles 參考
 #http://python-docx.readthedocs.io/en/latest/user/styles-understanding.html
@@ -55,6 +69,22 @@ t.cell(2, 0).text = u'unit 3'
 t.cell(2, 1).text = u'unit 4'
 t.cell(3, 0).text = u''
 t.cell(3, 1).text = u'unit 5'
+t.cell(4, 0).text = u'unit 6'
+t.cell(4, 1).text = u'unit 7'
+
+TableCell = document.tables[0].cell(4,0)
+TableCell.add_paragraph('ggggg', style='List Number')
+
+TableCell = document.tables[0].cell(4,1)
+p = TableCell.add_paragraph('hhhhh', style='List Number')
+p.num_id = 1
+
+#cell = document.tables[0].cell(4,0)
+#paragraph = cell.paragraphs[0]
+#run = paragraph.add_run(...)
+#run.text = "new text"
+#t.cell(4, 0).paragraphs[0]
+#t.cell(4, 1).text = u''
 
 #儲存格合併
 a = t.cell(2, 0)

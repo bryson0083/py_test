@@ -55,7 +55,7 @@ for j in range(df.shape[-1]):
 # add the rest of the data frame
 for i in range(df.shape[0]):
     for j in range(df.shape[-1]):
-        t.cell(i+1,j).text = str(df.values[i,j])
+    	t.cell(i+1,j).text = str(df.values[i,j])
 
 # save the doc
 document.save('./aaa.docx')
