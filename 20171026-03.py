@@ -4,11 +4,11 @@
 
 @author: Bryson Xue
 
-@Note: 
+@Note:
 	1. 透過郵件發送每日程式選股結果
 
 @Ref:
-	
+
 """
 import json
 import util.Mailer as GMail
@@ -40,14 +40,14 @@ m.send_from = data['gmail']['id']				# 寄件者
 m.gmail_password = data['gmail']['pwd']			# 寄件者 GMAIL 密碼
 
 print('@@@ 郵件清單1發送:')
-m.recipients = ['aaa@gmail.com']	
-m.subject = '每日程式選股清單' + str_date
+m.recipients = ['bryson0083@gmail.com']
+m.subject = 'sssss每日程式選股清單' + str_date
 m.message = '你好:\n以下為本日程式選股清單，詳見附件檔案.\n\n\n'
-m.attachments = file_list
+#m.attachments = file_list
 m.send_email()
 
-print('@@@ 郵件清單2發送:')
-m.recipients = ['bbb@gmail.com']	
+"""print('@@@ 郵件清單2發送:')
+m.recipients = ['bbb@gmail.com']
 m.subject = '每日程式選股清單' + str_date
 m.message = '你好:\n以下為本日程式選股清單，詳見附件檔案.\n\n\n'
 m.attachments = file_list2
@@ -59,5 +59,5 @@ m.subject = '每日程式選股清單' + str_date
 m.message = '你好:\n以下為本日程式選股清單，詳見附件檔案.\n\n\n'
 m.attachments = file_list3
 m.send_email()
-
+"""
 print("End of prog.")
